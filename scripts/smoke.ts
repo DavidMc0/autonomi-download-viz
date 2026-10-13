@@ -13,7 +13,7 @@ const flag = (name: string, def?: string) => {
 const base = flag("base", "http://localhost:5173")!;
 const shots = flag("shots");
 const skins = (flag("skins", "baseline") ?? "baseline").split(",");
-const traces = (flag("traces", "quick,medium-64mb,flaky,nested,fail-connect,fail-mid,cancel,huge") ?? "").split(",");
+const traces = (flag("traces", "quick,large,medium-64mb,flaky,nested,fail-connect,fail-mid,cancel,huge") ?? "").split(",");
 
 const browser = await chromium.launch(browserLaunchOptions());
 const page = await browser.newPage({ viewport: { width: 1400, height: 900 } });

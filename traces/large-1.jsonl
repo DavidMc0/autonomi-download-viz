@@ -1,0 +1,173 @@
+{"kind":"header","format":1,"address":"ee03920dd564f6540d9f1434e926d66d1ce38ba0c4d4575e6e589a5214121b12","sdk":"0.1.2","source":"live","recordedAt":"2026-10-13T22:27:45.562Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","name":"devuan_chimaera_4.0.0_amd64_cd4.iso","size":648050688,"note":"size set from the final byte count"}
+{"t":40,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-1","operation":"connect","phase":"initializing","message":"Initializing the Autonomi browser core","status":"running"}}
+{"t":41,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-1","operation":"connect","phase":"connecting","message":"Authenticating 7 bootstrap nodes","status":"running"}}
+{"t":2370,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-1","operation":"connect","phase":"complete","message":"Connected to authenticated peer a1f073e0ffc1a1890e8d072015fa2437a1090997b47c0412c0bfabe7c7e16199","status":"running"}}
+{"t":2370,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-1","operation":"connect","phase":"complete","message":"Connected to authenticated peer a1f073e0ffc1a1890e8d072015fa2437a1090997b47c0412c0bfabe7c7e16199","status":"succeeded"}}
+{"t":2371,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Fetching public DataMap ee03920dd564f6540d9f1434e926d66d1ce38ba0c4d4575e6e589a5214121b12","status":"running"}}
+{"t":2371,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Fetching ee03920dd564f6540d9f1434e926d66d1ce38ba0c4d4575e6e589a5214121b12","status":"running"}}
+{"t":3958,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Verified public DataMap (322 bytes)","status":"running"}}
+{"t":3958,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Resolving nested DataMap record 7744ecc01852de3ca4707f0f7e1b8a681ed55ecbac3a5570aaff99fb73b8896a","status":"running"}}
+{"t":3958,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Fetching 7744ecc01852de3ca4707f0f7e1b8a681ed55ecbac3a5570aaff99fb73b8896a","status":"running"}}
+{"t":3959,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Resolving nested DataMap record 8384e6f6885a1f1c9918374c314c0fa1dd59c8565de2fb779758328a9fcbefd9","status":"running"}}
+{"t":3959,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Fetching 8384e6f6885a1f1c9918374c314c0fa1dd59c8565de2fb779758328a9fcbefd9","status":"running"}}
+{"t":3959,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Resolving nested DataMap record cb376dc544eb31eac4816e376101ea574ab035a57d2e18e62066e3d4815077d8","status":"running"}}
+{"t":3959,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Fetching cb376dc544eb31eac4816e376101ea574ab035a57d2e18e62066e3d4815077d8","status":"running"}}
+{"t":9759,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 0/155","status":"running"}}
+{"t":11625,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 1/155","status":"running"}}
+{"t":17316,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 2/155","status":"running"}}
+{"t":18703,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 3/155","status":"running"}}
+{"t":20041,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 4/155","status":"running"}}
+{"t":21072,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 5/155","status":"running"}}
+{"t":22327,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 6/155","status":"running"}}
+{"t":28622,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 7/155","status":"running"}}
+{"t":29198,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 8/155","status":"running"}}
+{"t":29588,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 9/155","status":"running"}}
+{"t":31213,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 10/155","status":"running"}}
+{"t":33494,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 11/155","status":"running"}}
+{"t":34093,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 12/155","status":"running"}}
+{"t":39298,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 13/155","status":"running"}}
+{"t":41582,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 14/155","status":"running"}}
+{"t":44098,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 15/155","status":"running"}}
+{"t":45750,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 16/155","status":"running"}}
+{"t":46286,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 17/155","status":"running"}}
+{"t":47976,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 18/155","status":"running"}}
+{"t":48252,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 19/155","status":"running"}}
+{"t":51038,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 20/155","status":"running"}}
+{"t":51870,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 21/155","status":"running"}}
+{"t":53408,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 22/155","status":"running"}}
+{"t":58461,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 23/155","status":"running"}}
+{"t":59515,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 24/155","status":"running"}}
+{"t":60587,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 25/155","status":"running"}}
+{"t":60813,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 26/155","status":"running"}}
+{"t":62241,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 27/155","status":"running"}}
+{"t":64583,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 28/155","status":"running"}}
+{"t":68958,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 29/155","status":"running"}}
+{"t":69069,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 30/155","status":"running"}}
+{"t":70633,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 31/155","status":"running"}}
+{"t":70853,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 32/155","status":"running"}}
+{"t":72998,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 33/155","status":"running"}}
+{"t":74746,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 34/155","status":"running"}}
+{"t":76250,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 35/155","status":"running"}}
+{"t":77314,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 36/155","status":"running"}}
+{"t":83486,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 37/155","status":"running"}}
+{"t":84629,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 38/155","status":"running"}}
+{"t":86699,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 39/155","status":"running"}}
+{"t":87193,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 40/155","status":"running"}}
+{"t":88601,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 41/155","status":"running"}}
+{"t":89632,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 42/155","status":"running"}}
+{"t":89893,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 43/155","status":"running"}}
+{"t":90634,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 44/155","status":"running"}}
+{"t":91417,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 45/155","status":"running"}}
+{"t":98399,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 46/155","status":"running"}}
+{"t":99263,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 47/155","status":"running"}}
+{"t":101697,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 48/155","status":"running"}}
+{"t":101918,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 49/155","status":"running"}}
+{"t":107659,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 50/155","status":"running"}}
+{"t":107989,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 51/155","status":"running"}}
+{"t":108441,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 52/155","status":"running"}}
+{"t":108466,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 53/155","status":"running"}}
+{"t":112389,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 54/155","status":"running"}}
+{"t":118318,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 55/155","status":"running"}}
+{"t":118403,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 56/155","status":"running"}}
+{"t":119324,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 57/155","status":"running"}}
+{"t":120390,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 58/155","status":"running"}}
+{"t":121120,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 59/155","status":"running"}}
+{"t":121935,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 60/155","status":"running"}}
+{"t":122631,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 61/155","status":"running"}}
+{"t":123231,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 62/155","status":"running"}}
+{"t":125373,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 63/155","status":"running"}}
+{"t":126786,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 64/155","status":"running"}}
+{"t":128084,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 65/155","status":"running"}}
+{"t":131697,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 66/155","status":"running"}}
+{"t":132126,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 67/155","status":"running"}}
+{"t":132967,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 68/155","status":"running"}}
+{"t":136231,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 69/155","status":"running"}}
+{"t":139660,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 70/155","status":"running"}}
+{"t":141393,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 71/155","status":"running"}}
+{"t":143586,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 72/155","status":"running"}}
+{"t":145287,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 73/155","status":"running"}}
+{"t":147214,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 74/155","status":"running"}}
+{"t":148100,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 75/155","status":"running"}}
+{"t":149057,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 76/155","status":"running"}}
+{"t":150429,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 77/155","status":"running"}}
+{"t":151407,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 78/155","status":"running"}}
+{"t":152570,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 79/155","status":"running"}}
+{"t":157548,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 80/155","status":"running"}}
+{"t":161838,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 81/155","status":"running"}}
+{"t":162709,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 82/155","status":"running"}}
+{"t":166056,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 83/155","status":"running"}}
+{"t":172403,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 84/155","status":"running"}}
+{"t":182265,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 85/155","status":"running"}}
+{"t":183095,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 86/155","status":"running"}}
+{"t":184825,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 87/155","status":"running"}}
+{"t":188478,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 88/155","status":"running"}}
+{"t":191299,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 89/155","status":"running"}}
+{"t":192527,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 90/155","status":"running"}}
+{"t":194101,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 91/155","status":"running"}}
+{"t":198349,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 92/155","status":"running"}}
+{"t":198903,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 93/155","status":"running"}}
+{"t":199020,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 94/155","status":"running"}}
+{"t":199628,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 95/155","status":"running"}}
+{"t":200378,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 96/155","status":"running"}}
+{"t":202876,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 97/155","status":"running"}}
+{"t":203305,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 98/155","status":"running"}}
+{"t":203702,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 99/155","status":"running"}}
+{"t":205096,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 100/155","status":"running"}}
+{"t":208462,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 101/155","status":"running"}}
+{"t":208573,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 102/155","status":"running"}}
+{"t":208608,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 103/155","status":"running"}}
+{"t":210702,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 104/155","status":"running"}}
+{"t":212566,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 105/155","status":"running"}}
+{"t":213371,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 106/155","status":"running"}}
+{"t":213851,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 107/155","status":"running"}}
+{"t":214173,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 108/155","status":"running"}}
+{"t":215036,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 109/155","status":"running"}}
+{"t":215897,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 110/155","status":"running"}}
+{"t":217385,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 111/155","status":"running"}}
+{"t":217704,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 112/155","status":"running"}}
+{"t":218017,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 113/155","status":"running"}}
+{"t":220614,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 114/155","status":"running"}}
+{"t":223668,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 115/155","status":"running"}}
+{"t":224213,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 116/155","status":"running"}}
+{"t":224838,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 117/155","status":"running"}}
+{"t":228658,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 118/155","status":"running"}}
+{"t":229541,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 119/155","status":"running"}}
+{"t":229604,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 120/155","status":"running"}}
+{"t":232924,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 121/155","status":"running"}}
+{"t":234437,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 122/155","status":"running"}}
+{"t":237896,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 123/155","status":"running"}}
+{"t":240620,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 124/155","status":"running"}}
+{"t":243585,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 125/155","status":"running"}}
+{"t":243734,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 126/155","status":"running"}}
+{"t":244039,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 127/155","status":"running"}}
+{"t":244297,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 128/155","status":"running"}}
+{"t":245121,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 129/155","status":"running"}}
+{"t":246757,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 130/155","status":"running"}}
+{"t":249613,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 131/155","status":"running"}}
+{"t":250924,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 132/155","status":"running"}}
+{"t":252662,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 133/155","status":"running"}}
+{"t":255077,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 134/155","status":"running"}}
+{"t":257083,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 135/155","status":"running"}}
+{"t":257602,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 136/155","status":"running"}}
+{"t":258066,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 137/155","status":"running"}}
+{"t":260975,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 138/155","status":"running"}}
+{"t":263357,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 139/155","status":"running"}}
+{"t":264684,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 140/155","status":"running"}}
+{"t":266876,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 141/155","status":"running"}}
+{"t":266976,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 142/155","status":"running"}}
+{"t":267998,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 143/155","status":"running"}}
+{"t":268938,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 144/155","status":"running"}}
+{"t":270159,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 145/155","status":"running"}}
+{"t":270343,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 146/155","status":"running"}}
+{"t":270758,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 147/155","status":"running"}}
+{"t":274762,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 148/155","status":"running"}}
+{"t":276317,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 149/155","status":"running"}}
+{"t":279331,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 150/155","status":"running"}}
+{"t":280328,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 151/155","status":"running"}}
+{"t":282321,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 152/155","status":"running"}}
+{"t":284335,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 153/155","status":"running"}}
+{"t":286553,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 154/155","status":"running"}}
+{"t":291261,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Downloaded chunk 155/155","status":"running"}}
+{"t":301075,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"downloading","message":"Verified complete public-file-ee03920dd564f654.bin as 9c3cafbbcfec028e231794e8a4a9482a9c5d2e6b2ac8eb544e25053c110faaaf","status":"running"}}
+{"t":301242,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"complete","message":"Downloaded public-file-ee03920dd564f654.bin","status":"running","completed":648050688,"total":648050688,"unit":"bytes"}}
+{"t":301596,"kind":"sdk","ev":{"operationId":"4yj9cgayqxt-2","operation":"download","phase":"complete","message":"Downloaded public-file-ee03920dd564f654.bin","status":"succeeded","completed":648050688,"total":648050688,"unit":"bytes"}}

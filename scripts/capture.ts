@@ -2,6 +2,7 @@
 // record each as a 20-40 s WebM (Playwright screen recording, so DOM/SVG skins work too), write a
 // PNG of the finished state, and print perf numbers.
 //   node scripts/capture.ts <skin-id> [--size card|full] [--traces quick,large,flaky] [--theme light|dark]
+//   Perf only, at a fixed speed: --speed 1 --no-video
 // Needs the dev server (npm run dev) or a preview build on --base.
 
 import { mkdirSync, renameSync, rmSync, writeFileSync } from "node:fs";
@@ -18,6 +19,9 @@ const size = flag("size", "card");
 const theme = flag("theme", "light");
 const traces = flag("traces", "quick,large,flaky").split(",");
 const target = Number(flag("seconds", "30")) * 1000;
+const fixedSpeed = flag("speed", "");
+const noVideo = args.includes("--no-video");
+if (noVideo) args.splice(args.indexOf("--no-video"), 1);
 const skin = args[0];
 if (!skin) {
   console.error("usage: node scripts/capture.ts <skin-id> [--size card|full] [--traces a,b,c]");
@@ -38,9 +42,9 @@ for (const trace of traces) {
   await probe.waitForFunction(() => window.__viz?.ready);
   const duration = await probe.evaluate(() => window.__viz!.player.duration);
   await probe.close();
-  const speed = Math.max(0.25, Math.round((duration / target) * 100) / 100);
+  const speed = fixedSpeed ? Number(fixedSpeed) : Math.max(0.25, Math.round((duration / target) * 100) / 100);
 
-  const context = await browser.newContext({ viewport, recordVideo: { dir: tmp, size: viewport }, colorScheme: theme as "light" | "dark" });
+  const context = await browser.newContext({ viewport, ...(noVideo ? {} : { recordVideo: { dir: tmp, size: viewport } }), colorScheme: theme as "light" | "dark" });
   const page = await context.newPage();
   await page.goto(`${base}/#${skin}?trace=${trace}&speed=${speed}&capture=1&size=${size}&theme=${theme}&autoplay=0`);
   await page.waitForFunction(() => window.__viz?.ready);
@@ -53,14 +57,14 @@ for (const trace of traces) {
   const perf = await page.evaluate(() => window.__perf!.snapshot());
   await page.waitForTimeout(2500); // let the ending settle
   const stem = `${String(skin)}-${trace}${size === "full" ? "-full" : ""}`;
-  await page.locator("body").screenshot({ path: `${out}/${stem}.png` });
-  const video = page.video()!;
+  const video = page.video();
+  if (!noVideo) await page.locator("body").screenshot({ path: `${out}/${stem}.png` });
   await context.close();
-  renameSync(await video.path(), `${out}/${stem}.webm`);
+  if (video) renameSync(await video.path(), `${out}/${stem}.webm`);
   results.push({ trace, speed, durationS: +(duration / 1000).toFixed(1), clipS: +(duration / speed / 1000).toFixed(1), ...perf });
   console.log(`${stem}: ${(duration / 1000).toFixed(1)} s trace at ${speed}× · fps median ${perf.fpsMedian.toFixed(0)}, p5 ${perf.fpsP5.toFixed(0)} · skin ${perf.skinMsMean.toFixed(2)} ms/frame (p95 ${perf.skinMsP95.toFixed(2)})`);
 }
 
 await browser.close();
 rmSync(tmp, { recursive: true, force: true });
-writeFileSync(`${out}/${skin}${size === "full" ? "-full" : ""}-perf.json`, JSON.stringify(results, null, 2) + "\n");
+writeFileSync(`${out}/${skin}${size === "full" ? "-full" : ""}${fixedSpeed ? `-${fixedSpeed}x` : ""}-perf.json`, JSON.stringify(results, null, 2) + "\n");

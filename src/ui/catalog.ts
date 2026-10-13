@@ -37,7 +37,7 @@ const REAL_LABELS: Record<string, string> = {
   tones: "Three tones.mp3, 321 kB",
   "tones-stream": "Three tones.mp3 via openFile (no chunk progress)",
   "medium-64mb": "64 MB of random bytes (nested DataMap, 17 chunks)",
-  large: "large",
+  large: "large: devuan ISO, 633 MB",
 };
 
 function realLabel(id: string): string {

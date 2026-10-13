@@ -1,4 +1,12 @@
 // The skin contract (brief section 5.2). One harness, many skins.
+//
+// Shared rules agreed at the Step 0 review (see DECISIONS.md):
+// - Between connect.done and datamap.verified, SDK 0.1.2 sends nothing (no lookup rounds). Animate a
+//   calm "searching" idle driven by elapsed time. Playful skins may add illustrative hops, with
+//   `illustrativeNote` set. Still react to real lookup.* events if they ever arrive.
+// - The "blueprint" moment (the file's shape appears) is chunk.done with completed === 0: the first
+//   time the total is known. datamap.verified gets a smaller "map verified" beat of its own.
+// - Show bytes/s only when the size is known (file.meta / session.start); otherwise chunks/s.
 
 import type { VizEvent } from "../events/types";
 

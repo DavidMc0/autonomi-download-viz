@@ -17,6 +17,9 @@ declare global {
 }
 
 export class Hud {
+  /** Every frame since reset(), for capture.ts's whole-run figures. */
+  private allIntervals: number[] = [];
+  private allCosts: number[] = [];
   private intervals = new Float32Array(N);
   private costs = new Float32Array(N);
   private n = 0;
@@ -34,6 +37,8 @@ export class Hud {
   reset(): void {
     this.n = 0;
     this.i = 0;
+    this.allIntervals = [];
+    this.allCosts = [];
   }
 
   /** Record one rAF tick. `cost` is the skin's frame() time in ms (0 on a skipped frame). */
@@ -44,6 +49,10 @@ export class Hud {
     this.costs[this.i] = cost;
     this.i = (this.i + 1) % N;
     this.n = Math.min(N, this.n + 1);
+    if (this.allIntervals.length < 500_000) {
+      this.allIntervals.push(interval);
+      this.allCosts.push(cost);
+    }
 
     // Drop to 30 FPS when frames take over 20 ms for about a second; retry after 5 s of headroom.
     this.emaInterval += (interval - this.emaInterval) * 0.05;
@@ -57,7 +66,7 @@ export class Hud {
 
     if (this.el.hidden || now - this.lastText < 500) return;
     this.lastText = now;
-    const s = this.snapshot();
+    const s = summarise(Array.from(this.intervals.subarray(0, this.n)), Array.from(this.costs.subarray(0, this.n)), this.halfRate);
     const mem = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory;
     const lines = [
       `fps ${s.fpsMedian.toFixed(0).padStart(3)}  p5 ${s.fpsP5.toFixed(0).padStart(3)}${this.halfRate ? "  (30fps mode)" : ""}`,
@@ -68,19 +77,24 @@ export class Hud {
     this.el.textContent = lines.join("\n");
   }
 
+  /** Whole-run figures since the last reset(). The HUD text shows only the last 600 frames. */
   snapshot(): PerfSnapshot {
-    const n = this.n;
-    if (!n) return { frames: 0, fpsMedian: 0, fpsP5: 0, skinMsMean: 0, skinMsP95: 0, halfRate: this.halfRate };
-    const iv = Array.from(this.intervals.subarray(0, n)).sort((a, b) => a - b);
-    const cs = Array.from(this.costs.subarray(0, n)).sort((a, b) => a - b);
-    const q = (arr: number[], p: number) => arr[Math.min(arr.length - 1, Math.floor(p * arr.length))];
-    return {
-      frames: n,
-      fpsMedian: 1000 / q(iv, 0.5),
-      fpsP5: 1000 / q(iv, 0.95), // the slowest 5 % of frames
-      skinMsMean: cs.reduce((a, b) => a + b, 0) / n,
-      skinMsP95: q(cs, 0.95),
-      halfRate: this.halfRate,
-    };
+    return summarise(this.allIntervals.slice(), this.allCosts.slice(), this.halfRate);
   }
+}
+
+function summarise(iv: number[], cs: number[], halfRate: boolean): PerfSnapshot {
+  const n = iv.length;
+  if (!n) return { frames: 0, fpsMedian: 0, fpsP5: 0, skinMsMean: 0, skinMsP95: 0, halfRate };
+  iv.sort((a, b) => a - b);
+  cs.sort((a, b) => a - b);
+  const q = (arr: number[], p: number) => arr[Math.min(arr.length - 1, Math.floor(p * arr.length))];
+  return {
+    frames: n,
+    fpsMedian: 1000 / q(iv, 0.5),
+    fpsP5: 1000 / q(iv, 0.95), // the slowest 5 % of frames
+    skinMsMean: cs.reduce((a, b) => a + b, 0) / n,
+    skinMsP95: q(cs, 0.95),
+    halfRate,
+  };
 }

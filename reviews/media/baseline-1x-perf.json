@@ -1,0 +1,14 @@
+[
+  {
+    "trace": "large",
+    "speed": 1,
+    "durationS": 301.6,
+    "clipS": 301.6,
+    "frames": 54283,
+    "fpsMedian": 178.57142857217102,
+    "fpsP5": 175.43859649176554,
+    "skinMsMean": 0.08500819791007419,
+    "skinMsP95": 0.20000004768371582,
+    "halfRate": false
+  }
+]

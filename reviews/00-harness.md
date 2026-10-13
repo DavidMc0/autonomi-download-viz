@@ -19,7 +19,7 @@ Each clip lasts about 30 s; the speed is chosen so the whole trace fits. Card si
 | Trace | Real/synthetic | Trace length | Speed | Video | Final frame |
 | --- | --- | --- | --- | --- | --- |
 | quick (lucky.jpg, 139 kB, 3 chunks) | real | 19.0 s | 0.63× | `baseline-quick.webm` | `baseline-quick.png` |
-| **large → 64 MB stand-in** (17 chunks, nested) | real | 44.3 s | 1.48× | `baseline-medium-64mb.webm` | `baseline-medium-64mb.png` |
+| large (devuan ISO, 648 MB, 155 chunks, nested) | real | 301.6 s | 10.05× | `baseline-large.webm` | `baseline-large.png` |
 | flaky | synthetic | 32.0 s | 1.07× | `baseline-flaky.webm` | `baseline-flaky.png` |
 
 ## Performance
@@ -122,3 +122,33 @@ Other facts from the runs:
 - The in-page "Record WebM" button only works for canvas skins. DOM/SVG skins use `npm run capture` (Playwright video), as the brief allows.
 - Live "Download and save" mode was not exercised headlessly, because it needs a save picker. The synthetic `save` option covers the save events in replays.
 - There's no `nested` real trace under that name. The real 64 MB trace *is* nested, and the synthetic `nested` preset copies its ordering.
+
+---
+
+## Follow-up (2026-10-14): David's answers applied
+
+**What changed**
+- Your answers to questions 3-6 are logged in `DECISIONS.md`. The shared skin rules (calm "searching" idle, blueprint at `chunk 0/N`, MB/s only when the size is known) are also written at the top of `src/skins/types.ts`, so every skin builds to them.
+- **The real `large` trace is recorded twice** (`large-1`, `large-2`): `devuan_chimaera_4.0.0_amd64_cd4.iso`. Its exact size is 648,050,688 bytes (= 632,862 KiB). The runs were recorded without a size, and the header size was then set from the SDK's exact final byte count (`scripts/set-size.ts`), as a page that knew the size would supply it. The `large` capture replaced the 64 MB stand-in (table above).
+- **The perf figures now cover the whole run** (they were only the last 600 frames). Baseline over `large` at **1× for the full 301.6 s: 0.09 ms mean / 0.20 ms p95 skin time per frame**. FPS was again uncapped headless 179 / 175.
+- The repo is pushed. **The first Pages deploy failed** because Pages isn't switched on yet ("Get Pages site failed: Not Found").
+
+**What the `large` runs show**
+
+| | large-1 | large-2 |
+| --- | --- | --- |
+| Connect → `chunk 0/155` | 9.8 s | 10.3 s |
+| Chunks (`0/155` → `155/155`) | 281.5 s, 2.3 MB/s | 307.9 s, 2.1 MB/s |
+| Whole-file verify (last chunk → verified) | 9.8 s | about 10 s |
+| Gaps ≥ 3 s / ≥ 5 s / ≥ 8 s between chunks | 28 / 10 / 1 | 40 / 11 / 0 |
+| Longest gap | 9.9 s | 7.4 s |
+
+**Open questions**
+1. **Enable Pages:** Settings → Pages → Build and deployment → Source: **GitHub Actions**, then press "Re-run all jobs" on the failed run (or tell me and I'll push again).
+2. **Stall threshold.** With the brief's 3 s, a real large download "stalls" 28-40 times in 5 minutes, so stall scenes (scratches, foot-tapping, the cat gag) would fire every 7-10 s. Options:
+   - **A:** keep 3 s.
+   - **B:** raise it to 5 s (about 10 stalls per large run).
+   - **C:** keep 3 s for the plain progress text, but have skins treat only gaps of 5 s or more as a "big" stall scene.
+
+   *I suggest B.* It keeps the event meaningful, and short pauses still show as a falling rate.
+3. **Verify pause.** Whole-file verification takes about 10 s on a 650 MB file with no events. *I suggest* every skin gives it a clear "checking" beat, not a frozen finish. This would be a shared rule like the searching idle.
