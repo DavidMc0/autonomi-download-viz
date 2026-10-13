@@ -1,0 +1,18 @@
+[
+  { "id": "baseline", "step": 0, "title": "Baseline", "theme": "informative", "status": "in review" },
+  { "id": "murmuration", "step": 1, "title": "Murmuration", "theme": "artistic", "status": "planned" },
+  { "id": "robot-dj", "step": 2, "title": "Robot DJ", "theme": "playful", "status": "planned" },
+  { "id": "address-space", "step": 3, "title": "Address-space map", "theme": "informative", "status": "planned" },
+  { "id": "hash-garden", "step": 4, "title": "Hash garden", "theme": "artistic", "status": "planned" },
+  { "id": "ant-colony", "step": 5, "title": "Ant colony", "theme": "playful", "status": "planned" },
+  { "id": "chunk-waterfall", "step": 6, "title": "Chunk waterfall", "theme": "informative", "status": "planned" },
+  { "id": "file-song", "step": 7, "title": "The file's song", "theme": "artistic", "status": "planned" },
+  { "id": "pizza-delivery", "step": 8, "title": "Pizza delivery", "theme": "playful", "status": "planned" },
+  { "id": "byte-flow", "step": 9, "title": "Byte-flow diagram", "theme": "informative", "status": "planned" },
+  { "id": "stained-glass", "step": 10, "title": "Stained glass", "theme": "artistic", "status": "planned" },
+  { "id": "if-it-fits", "step": 11, "title": "If it fits, I sits", "theme": "playful", "status": "planned" },
+  { "id": "verification-ledger", "step": 12, "title": "Verification ledger", "theme": "informative", "status": "planned" },
+  { "id": "ink-in-water", "step": 13, "title": "Ink in water", "theme": "artistic", "status": "planned" },
+  { "id": "falling-blocks", "step": 14, "title": "Falling blocks", "theme": "playful", "status": "planned" },
+  { "id": "network-health", "step": 15, "title": "Network health and privacy", "theme": "informative", "status": "planned" }
+]

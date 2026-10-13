@@ -1,0 +1,35 @@
+{"kind":"header","format":1,"address":"f6eeba94008f493a8518186b0647df6d39dbde75f41d5b79549e9a4e63a1ab43","sdk":"0.1.2","source":"live","recordedAt":"2026-10-13T22:03:29.092Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0","name":"64 MB of random bytes.bin","size":67108864}
+{"t":29,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-1","operation":"connect","phase":"initializing","message":"Initializing the Autonomi browser core","status":"running"}}
+{"t":30,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-1","operation":"connect","phase":"connecting","message":"Authenticating 7 bootstrap nodes","status":"running"}}
+{"t":2360,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-1","operation":"connect","phase":"complete","message":"Connected to authenticated peer a1f073e0ffc1a1890e8d072015fa2437a1090997b47c0412c0bfabe7c7e16199","status":"running"}}
+{"t":2360,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-1","operation":"connect","phase":"complete","message":"Connected to authenticated peer a1f073e0ffc1a1890e8d072015fa2437a1090997b47c0412c0bfabe7c7e16199","status":"succeeded"}}
+{"t":2360,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Fetching public DataMap f6eeba94008f493a8518186b0647df6d39dbde75f41d5b79549e9a4e63a1ab43","status":"running"}}
+{"t":2360,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Fetching f6eeba94008f493a8518186b0647df6d39dbde75f41d5b79549e9a4e63a1ab43","status":"running"}}
+{"t":4723,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Verified public DataMap (327 bytes)","status":"running"}}
+{"t":4723,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Resolving nested DataMap record 2d521756175d9c5ce5dd46fa2e9afafb1a18456df3e709dec0cacadd969d53a5","status":"running"}}
+{"t":4723,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Fetching 2d521756175d9c5ce5dd46fa2e9afafb1a18456df3e709dec0cacadd969d53a5","status":"running"}}
+{"t":4723,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Resolving nested DataMap record dd11fc2adf1403e4a206b9e696e522391909f5769a3ef0251e8fc0c1098f197e","status":"running"}}
+{"t":4724,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Fetching dd11fc2adf1403e4a206b9e696e522391909f5769a3ef0251e8fc0c1098f197e","status":"running"}}
+{"t":4724,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Resolving nested DataMap record 89573e73ad694ba8ab63a8e1597e39ce030d86dc936b1517a762f1dafac793be","status":"running"}}
+{"t":4724,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Fetching 89573e73ad694ba8ab63a8e1597e39ce030d86dc936b1517a762f1dafac793be","status":"running"}}
+{"t":15394,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 0/17","status":"running"}}
+{"t":16022,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 1/17","status":"running"}}
+{"t":24086,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 2/17","status":"running"}}
+{"t":24314,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 3/17","status":"running"}}
+{"t":25176,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 4/17","status":"running"}}
+{"t":25895,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 5/17","status":"running"}}
+{"t":31054,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 6/17","status":"running"}}
+{"t":32217,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 7/17","status":"running"}}
+{"t":32917,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 8/17","status":"running"}}
+{"t":33421,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 9/17","status":"running"}}
+{"t":35105,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 10/17","status":"running"}}
+{"t":37646,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 11/17","status":"running"}}
+{"t":37992,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 12/17","status":"running"}}
+{"t":38649,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 13/17","status":"running"}}
+{"t":39456,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 14/17","status":"running"}}
+{"t":41054,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 15/17","status":"running"}}
+{"t":43131,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 16/17","status":"running"}}
+{"t":43334,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Downloaded chunk 17/17","status":"running"}}
+{"t":44268,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"downloading","message":"Verified complete public-file-f6eeba94008f493a.bin as ead68c28971b98431f0018853d092de46dba66f40b9cc6eaed4acac44313b3cc","status":"running"}}
+{"t":44285,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"complete","message":"Downloaded public-file-f6eeba94008f493a.bin","status":"running","completed":67108864,"total":67108864,"unit":"bytes"}}
+{"t":44323,"kind":"sdk","ev":{"operationId":"p3os9dgybxd-2","operation":"download","phase":"complete","message":"Downloaded public-file-f6eeba94008f493a.bin","status":"succeeded","completed":67108864,"total":67108864,"unit":"bytes"}}

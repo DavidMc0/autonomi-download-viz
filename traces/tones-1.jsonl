@@ -1,0 +1,15 @@
+{"kind":"header","format":1,"address":"2e36c503096c296a9bb17258fc29dda5d9f5ba9706964000ec0760f9adbc7082","sdk":"0.1.2","source":"live","recordedAt":"2026-10-13T22:01:44.235Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0"}
+{"t":170,"kind":"sdk","ev":{"operationId":"5eyslc18r52-1","operation":"connect","phase":"initializing","message":"Initializing the Autonomi browser core","status":"running"}}
+{"t":180,"kind":"sdk","ev":{"operationId":"5eyslc18r52-1","operation":"connect","phase":"connecting","message":"Authenticating 7 bootstrap nodes","status":"running"}}
+{"t":3185,"kind":"sdk","ev":{"operationId":"5eyslc18r52-1","operation":"connect","phase":"complete","message":"Connected to authenticated peer a1f073e0ffc1a1890e8d072015fa2437a1090997b47c0412c0bfabe7c7e16199","status":"running"}}
+{"t":3185,"kind":"sdk","ev":{"operationId":"5eyslc18r52-1","operation":"connect","phase":"complete","message":"Connected to authenticated peer a1f073e0ffc1a1890e8d072015fa2437a1090997b47c0412c0bfabe7c7e16199","status":"succeeded"}}
+{"t":3188,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"downloading","message":"Fetching public DataMap 2e36c503096c296a9bb17258fc29dda5d9f5ba9706964000ec0760f9adbc7082","status":"running"}}
+{"t":3188,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"downloading","message":"Fetching 2e36c503096c296a9bb17258fc29dda5d9f5ba9706964000ec0760f9adbc7082","status":"running"}}
+{"t":7500,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"downloading","message":"Verified public DataMap (311 bytes)","status":"running"}}
+{"t":7504,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"downloading","message":"Downloaded chunk 0/3","status":"running"}}
+{"t":8469,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"downloading","message":"Downloaded chunk 1/3","status":"running"}}
+{"t":10452,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"downloading","message":"Downloaded chunk 2/3","status":"running"}}
+{"t":10819,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"downloading","message":"Downloaded chunk 3/3","status":"running"}}
+{"t":10829,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"downloading","message":"Verified complete public-file-2e36c503096c296a.bin as 46b90c6a9be8d35d3f081ef7fdb30f05069f7081569e8032d3093a814fafe1e5","status":"running"}}
+{"t":10831,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"complete","message":"Downloaded public-file-2e36c503096c296a.bin","status":"running","completed":321035,"total":321035,"unit":"bytes"}}
+{"t":10832,"kind":"sdk","ev":{"operationId":"5eyslc18r52-2","operation":"download","phase":"complete","message":"Downloaded public-file-2e36c503096c296a.bin","status":"succeeded","completed":321035,"total":321035,"unit":"bytes"}}

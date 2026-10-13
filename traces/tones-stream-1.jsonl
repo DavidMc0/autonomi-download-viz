@@ -1,0 +1,12 @@
+{"kind":"header","format":1,"address":"2e36c503096c296a9bb17258fc29dda5d9f5ba9706964000ec0760f9adbc7082","sdk":"0.1.2","source":"live","recordedAt":"2026-10-13T22:01:44.383Z","userAgent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/155.0.0.0 Safari/537.36 Edg/155.0.0.0"}
+{"t":111,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-1","operation":"connect","phase":"initializing","message":"Initializing the Autonomi browser core","status":"running"}}
+{"t":121,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-1","operation":"connect","phase":"connecting","message":"Authenticating 7 bootstrap nodes","status":"running"}}
+{"t":3125,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-1","operation":"connect","phase":"complete","message":"Connected to authenticated peer a1f073e0ffc1a1890e8d072015fa2437a1090997b47c0412c0bfabe7c7e16199","status":"running"}}
+{"t":3125,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-1","operation":"connect","phase":"complete","message":"Connected to authenticated peer a1f073e0ffc1a1890e8d072015fa2437a1090997b47c0412c0bfabe7c7e16199","status":"succeeded"}}
+{"t":3128,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-2","operation":"open-file","phase":"opening","message":"Fetching public DataMap 2e36c503096c296a9bb17258fc29dda5d9f5ba9706964000ec0760f9adbc7082","status":"running"}}
+{"t":3128,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-2","operation":"open-file","phase":"opening","message":"Fetching 2e36c503096c296a9bb17258fc29dda5d9f5ba9706964000ec0760f9adbc7082","status":"running"}}
+{"t":7491,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-2","operation":"open-file","phase":"opening","message":"Verified public DataMap (311 bytes)","status":"running"}}
+{"t":7494,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-2","operation":"open-file","phase":"opening","message":"Ready to stream public-file-2e36c503096c296a.bin (321035 bytes, 3 chunks)","status":"running"}}
+{"t":7494,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-2","operation":"open-file","phase":"complete","message":"Opened public-file-2e36c503096c296a.bin","status":"running"}}
+{"t":7494,"kind":"sdk","ev":{"operationId":"9ygc7zeev8s-2","operation":"open-file","phase":"complete","message":"Opened public-file-2e36c503096c296a.bin","status":"succeeded"}}
+{"t":9805,"kind":"note","message":"stream finished: 321035 bytes"}

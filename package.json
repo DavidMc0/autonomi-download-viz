@@ -1,0 +1,29 @@
+{
+  "name": "autonomi-download-viz",
+  "private": true,
+  "version": "0.0.0",
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "capture": "node scripts/capture.ts",
+    "record": "node scripts/record.ts",
+    "smoke": "node scripts/smoke.ts"
+  },
+  "dependencies": {
+    "@withautonomi/ant-browser-sdk": "0.1.2",
+    "tweakpane": "4.0.5"
+  },
+  "devDependencies": {
+    "@tweakpane/core": "2.0.5",
+    "@types/node": "26.6.3",
+    "jsdom": "30.1.1",
+    "playwright-core": "1.64.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.1",
+    "vitest": "5.0.2"
+  }
+}
