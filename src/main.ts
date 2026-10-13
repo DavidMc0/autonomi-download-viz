@@ -469,7 +469,7 @@ function wire(): void {
       chunks: synth.chunks, size: Math.round(synth.sizeMB * 1e6), latencyMs: synth.latencyMs, jitter: synth.jitter,
       concurrency: synth.concurrency, retryRate: synth.retryRate, lookupRounds: synth.lookupRounds,
       lookupFailures: synth.lookupFailures, reseed: synth.reseed, nested: synth.nested,
-      stalls: Array.from({ length: synth.stalls }, (_, i) => ({ at: (i + 1) / (synth.stalls + 1), ms: 5000 })),
+      stalls: Array.from({ length: synth.stalls }, (_, i) => ({ at: (i + 1) / (synth.stalls + 1), ms: 7000 })),
       outcome: synth.outcome as SyntheticParams["outcome"], save: synth.save,
     };
     void useTrace(generateTrace(params, "custom synthetic"), "custom");

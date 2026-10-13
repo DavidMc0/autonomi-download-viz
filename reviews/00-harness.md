@@ -20,7 +20,7 @@ Each clip lasts about 30 s; the speed is chosen so the whole trace fits. Card si
 | --- | --- | --- | --- | --- | --- |
 | quick (lucky.jpg, 139 kB, 3 chunks) | real | 19.0 s | 0.63× | `baseline-quick.webm` | `baseline-quick.png` |
 | large (devuan ISO, 648 MB, 155 chunks, nested) | real | 301.6 s | 10.05× | `baseline-large.webm` | `baseline-large.png` |
-| flaky | synthetic | 32.0 s | 1.07× | `baseline-flaky.webm` | `baseline-flaky.png` |
+| flaky | synthetic | 39.0 s | 1.3× | `baseline-flaky.webm` | `baseline-flaky.png` |
 
 ## Performance
 
@@ -152,3 +152,9 @@ Other facts from the runs:
 
    *I suggest B.* It keeps the event meaningful, and short pauses still show as a falling rate.
 3. **Verify pause.** Whole-file verification takes about 10 s on a 650 MB file with no events. *I suggest* every skin gives it a clear "checking" beat, not a frozen finish. This would be a shared rule like the searching idle.
+
+### Resolved (2026-10-14)
+
+- Stall threshold raised to **5 s** (question 2: option B). `flaky` now has 7 s and 9 s stalls (39.0 s trace); captures re-recorded.
+- **"Checking" moment** added as a shared rule (question 3). Baseline already shows "Verifying" with a full bar during the about 10 s check.
+- Pages is enabled. The deploy runs on each push to `main`.

@@ -63,7 +63,7 @@ export const SYNTHETIC_PRESETS: Record<string, { label: string; params: Partial<
     label: "Flaky: failed queries, reseed, two stalls",
     params: {
       address: syntheticAddress("flaky"), size: 160_000_000, chunks: 40, lookupRounds: 6, lookupFailures: 3, invalidAnswers: 1,
-      reseed: true, retryRate: 0.1, jitter: 0.8, stalls: [{ at: 0.3, ms: 5000 }, { at: 0.7, ms: 7000 }],
+      reseed: true, retryRate: 0.1, jitter: 0.8, stalls: [{ at: 0.3, ms: 7000 }, { at: 0.7, ms: 9000 }],
     },
   },
   nested: { label: "Nested DataMap (synthetic)", params: { address: syntheticAddress("nested"), size: 600_000_000, chunks: 150, nested: true, concurrency: 8 } },

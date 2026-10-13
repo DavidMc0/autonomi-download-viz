@@ -8,7 +8,8 @@ import type { Trace, TraceHeader, TraceRecord, VizEvent, VizEventBody } from "./
 
 export const TICK_MS = 250;
 export const RATE_WINDOW_MS = 2000;
-export const STALL_MS = 3000;
+/** Raised from the brief's 3 s: real large downloads pause 3-5 s every 7-10 s (DECISIONS.md). */
+export const STALL_MS = 5000;
 
 export class Deriver {
   private nextTick = TICK_MS;

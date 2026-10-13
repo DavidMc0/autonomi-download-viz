@@ -45,7 +45,7 @@ describe("derive", () => {
     expect(rates[0].t).toBe(1250); // first grid tick after 0/N
     expect(rates.every((e) => e.t % 250 === 0)).toBe(true);
     const stalls = out.filter((e) => e.type === "chunk.stall");
-    expect(stalls).toEqual([{ t: 5000, type: "chunk.stall", sinceMs: 2000 }]);
+    expect(stalls).toEqual([{ t: 7000, type: "chunk.stall", sinceMs: 2000 }]);
     const at2000 = rates.find((e) => e.t === 2000)!;
     expect(at2000.type === "rate" && at2000.bytesPerSec).toBe(1_000_000); // 1 chunk in the 1 s since 0/N, × 1 MB per chunk
   });

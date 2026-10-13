@@ -2,6 +2,11 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-14 · Step 0 follow-up (David)
+
+- **Stall threshold raised from 3 s to 5 s.** Real large downloads had 28-40 gaps of 3 s or more in 5 minutes, but only 10-11 of 5 s or more. Shorter pauses show only as a falling rate. The synthetic `flaky` stalls were lengthened to 7 s and 9 s to match.
+- **"Checking" moment (rule for all skins):** whole-file verification takes about 10 s on a 650 MB file and sends no events, so every skin shows a clear, ongoing "checking" beat between the last chunk and `file.verified`. Baseline already shows "Verifying" with the full bar.
+
 ## 2026-10-13 · Step 0 review outcome (David)
 
 - **Silent "finding the file" stage (rule for all skins):** lookup rounds aren't reported in SDK 0.1.2, so every skin animates a calm "searching" idle between `connect.done` and `datamap.verified`, driven only by elapsed time. Playful skins may also show illustrative (Tier C) lookup hops, with the illustrative note. Skins still react to real `lookup.*` events if a future SDK sends them. An Appendix A issue asking Autonomi for structured lookup and chunk progress is to be drafted.
