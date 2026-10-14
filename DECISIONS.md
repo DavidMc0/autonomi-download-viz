@@ -2,6 +2,16 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-14 · Step 1 review outcome (David)
+
+- **Escort squads (new):** after the file is found, part of the flock flies out to each thread's star, rides in with the thread, then rejoins the main flock. Each of 8 squads owns 1/12 of the birds. A thread launches when its squad arrives, so each row lands about 0.7-1.6 s after its real `chunk.done`. Counts and totals stay real; the extra delay is purely visual. With no free squad (fast downloads, seeks, reduced motion), threads fly on their own as before. There is a tweak-panel switch for this.
+- **Palette:** keep it seeded by address.
+- **Ring:** keep the tilted 3D ring.
+- **Save image:** added. A "Save image" button appears in full mode once the file is verified, and downloads the finished tapestry as a 1200 × 1003 PNG (`<name>-tapestry.png`).
+- **Library:** port to OGL **after** the look is approved with the escort change.
+- **Thread origins:** from stars all around the ring (now the default; "near the file" stays in the tweak panel).
+- **Light theme:** keep the dusk-blue sky.
+
 ## 2026-10-14 · Step 1, Murmuration (build choices, awaiting review)
 
 - **Step 0 approved** ("next"). Baseline is marked approved in `skins.json`.

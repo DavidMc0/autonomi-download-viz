@@ -8,7 +8,10 @@
 // bits of their addresses). Illustrative: the other stars, the flock's path while searching (SDK
 // 0.1.2 sends no lookup rounds) and which star each thread comes from.
 
-import { Group, PerspectiveCamera, Scene, Vector2, Vector3, WebGLRenderer, type DataTexture, type Mesh, type Points, type ShaderMaterial } from "three";
+import {
+  Color, Group, OrthographicCamera, PerspectiveCamera, Scene, SRGBColorSpace, Vector2, Vector3, WebGLRenderer, WebGLRenderTarget,
+  type DataTexture, type Mesh, type Points, type ShaderMaterial,
+} from "three";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
@@ -19,7 +22,7 @@ import type { VizEvent } from "../../events/types";
 import { defaultParams, type Skin, type SkinContext, type TweakDef } from "../types";
 import { makeLook, portraitCells, ringAngle, type Look } from "./look";
 import {
-  BRIGHT, HIST, HIST_STEP_MS, LOOM_H, LOOM_W, LOOM_Y, RING_R, THREAD_PTS, THREADS,
+  BRIGHT, HIST, HIST_STEP_MS, LOOM_H, LOOM_W, LOOM_Y, RING_R, SQUADS, THREAD_PTS, THREADS,
   makeBright, makeFlock, makeSky, makeHistory, makeLoom, makePortraitTexture, makeRing, makeRowsTexture, makeThreads,
 } from "./scene";
 
@@ -30,8 +33,9 @@ const tweakables: TweakDef[] = [
   { key: "bloom", label: "bloom strength", kind: "number", min: 0, max: 2.5, step: 0.05, default: 0.7 },
   { key: "palette", label: "palette", kind: "select", options: { "seeded by address": "seeded", night: "night", dawn: "dawn", aurora: "aurora", ember: "ember" }, default: "seeded" },
   { key: "weave", label: "weave pattern", kind: "select", options: { "seeded by address": "seeded", twill: "twill", diamond: "diamond", stripes: "stripes" }, default: "seeded" },
+  { key: "escorts", label: "escort squads", kind: "boolean", default: true },
   { key: "drift", label: "camera drift", kind: "number", min: 0, max: 1, step: 0.05, default: 0.35 },
-  { key: "origins", label: "thread origins", kind: "select", options: { "near the file": "near", "across the ring": "ring" }, default: "near" },
+  { key: "origins", label: "thread origins", kind: "select", options: { "across the ring": "ring", "near the file": "near" }, default: "ring" },
 ];
 
 // Bright-star slots.
@@ -121,6 +125,7 @@ export default function create(): Skin {
 
   // Flock steering (world coordinates).
   const pos = new Vector3(), vel = new Vector3(), goal = new Vector3(), tmp = new Vector3();
+  const p0 = new Vector3(), p1 = new Vector3(), p2 = new Vector3();
   let spread = 1.6, alpha = 0, scatter = 0, scatterPulse = 0, wave = 0.6;
   let orbit = 0, histAcc = 0;
   let mode: Mode = "idle";
@@ -136,6 +141,21 @@ export default function create(): Skin {
   const thSide = new Uint8Array(THREADS);
   const thBright = new Float32Array(THREADS);
   const thEnd = new Float32Array(THREADS * 3);
+  const thLaunched = new Uint8Array(THREADS);
+
+  // Escort squads: part of the flock flies out to a thread's star, rides in with it, then rejoins.
+  const sqBusy = new Uint8Array(SQUADS);
+  const sqT0 = new Float32Array(SQUADS); // dispatched
+  const sqOut = new Float32Array(SQUADS); // outbound flight
+  const sqFly = new Float32Array(SQUADS); // with the thread
+  const sqRet = new Float32Array(SQUADS); // back to the flock
+  const sqOrigin = new Int16Array(SQUADS); // bright-star slot
+  const sqStart = new Float32Array(SQUADS * 3);
+  const sqEnd = new Float32Array(SQUADS * 3);
+  const sqPos = new Float32Array(SQUADS * 3);
+  const sqW = new Float32Array(SQUADS);
+  let saveBtn: HTMLButtonElement | null = null;
+  let saveShown = false;
   let total = 0, woven = 0, landed = 0;
   let maxRate = 0, rateBright = 0.7;
 
@@ -240,14 +260,16 @@ export default function create(): Skin {
     const ang = params.origins === "ring" ? r1 * Math.PI * 2 : targetAng + (r1 - 0.5) * 0.9;
     setLocal(o, ang, RING_R + (r2 - 0.5) * 1.2, (r2 - 0.5) * 0.4);
     bBase[o] = 0;
-    bPulse[o] = instant ? 0 : 0.9;
+    bPulse[o] = 0;
     if (slot < 0) {
       landRow(row, sideOf, rateBright, snapping || burst > 8);
       return;
     }
+    const pace = Math.max(0.6, Math.min(2, Number(params.speed)));
     thActive[slot] = 1;
+    thLaunched[slot] = 0;
     thStart[slot] = clock;
-    thDur[slot] = 1.0 / Math.max(0.6, Math.min(2, Number(params.speed)));
+    thDur[slot] = 1.0 / pace;
     thSlot[slot] = o;
     thRow[slot] = row;
     thSide[slot] = sideOf;
@@ -255,6 +277,84 @@ export default function create(): Skin {
     thEnd[slot * 3] = sideOf ? LOOM_W / 2 : -LOOM_W / 2;
     thEnd[slot * 3 + 1] = LOOM_Y + ((row + 0.5) / total) * LOOM_H;
     thEnd[slot * 3 + 2] = 0.05;
+
+    // Send a free squad to the star first; the thread launches when it arrives.
+    let sq = -1;
+    if (params.escorts && (mode === "download" || mode === "stall" || mode === "atFile")) {
+      for (let i = 0; i < SQUADS; i++) if (!sqBusy[i]) { sq = i; break; }
+    }
+    if (sq >= 0) {
+      slotWorld(o, p2);
+      const out = Math.min(1.6, Math.max(0.7, p2.distanceTo(pos) / 13)) / pace;
+      sqBusy[sq] = 1;
+      sqT0[sq] = clock;
+      sqOut[sq] = out;
+      sqFly[sq] = thDur[slot];
+      sqRet[sq] = 1.5 / pace;
+      sqOrigin[sq] = o;
+      sqStart[sq * 3] = pos.x; sqStart[sq * 3 + 1] = pos.y; sqStart[sq * 3 + 2] = pos.z;
+      sqEnd[sq * 3] = thEnd[slot * 3]; sqEnd[sq * 3 + 1] = thEnd[slot * 3 + 1]; sqEnd[sq * 3 + 2] = thEnd[slot * 3 + 2];
+      thStart[slot] = clock + out;
+    }
+  }
+
+  function bezier(a: Vector3, c: Vector3, b: Vector3, u: number, out: Vector3): Vector3 {
+    const q = 1 - u;
+    return out.set(
+      q * q * a.x + 2 * q * u * c.x + u * u * b.x,
+      q * q * a.y + 2 * q * u * c.y + u * u * b.y,
+      q * q * a.z + 2 * q * u * c.z + u * u * b.z,
+    );
+  }
+
+  /** Where each escort squad is now, and how far its birds have left the main flock (weight 0..1). */
+  const sa0 = new Vector3(), sa1 = new Vector3(), sa2 = new Vector3(), sOut = new Vector3();
+  function updateSquads(): void {
+    for (let s = 0; s < SQUADS; s++) {
+      let w = 0;
+      sOut.copy(pos);
+      if (sqBusy[s]) {
+        const launch = sqT0[s] + sqOut[s];
+        const land = launch + sqFly[s];
+        sa2.set(sqEnd[s * 3], sqEnd[s * 3 + 1], sqEnd[s * 3 + 2]);
+        if (clock < launch) {
+          // Out to the star, peeling off the flock.
+          const el = clock - sqT0[s];
+          sa0.set(sqStart[s * 3], sqStart[s * 3 + 1], sqStart[s * 3 + 2]);
+          slotWorld(sqOrigin[s], sa2);
+          sa1.copy(sa0).add(sa2).multiplyScalar(0.5);
+          sa1.y += 2.2;
+          bezier(sa0, sa1, sa2, ease(el / sqOut[s]), sOut);
+          w = Math.min(1, el / 0.35);
+        } else if (clock < land) {
+          // Riding in with the thread, just behind its head (same curve as the thread).
+          slotWorld(sqOrigin[s], sa0);
+          sa1.copy(sa0).add(sa2).multiplyScalar(0.5);
+          sa1.y += 3.6;
+          sa1.z += 2.4;
+          bezier(sa0, sa1, sa2, Math.max(0, ease((clock - launch) / sqFly[s]) - 0.035), sOut);
+          w = 1;
+        } else {
+          // Back to the flock, blending in as it arrives.
+          const r = (clock - land) / sqRet[s];
+          if (r >= 1 || ended()) {
+            sqBusy[s] = 0;
+          } else {
+            sa1.copy(sa2).add(pos).multiplyScalar(0.5);
+            sa1.y += 1.8;
+            sa1.z += 1.2;
+            bezier(sa2, sa1, pos, ease(r), sOut);
+            w = 1 - ease((r - 0.55) / 0.45);
+          }
+        }
+      }
+      sqPos[s * 3] = sOut.x; sqPos[s * 3 + 1] = sOut.y; sqPos[s * 3 + 2] = sOut.z;
+      sqW[s] = w;
+    }
+  }
+
+  function ended(): boolean {
+    return mode === "failed" || mode === "cancelled";
   }
 
   // ---------------------------------------------------------------------------
@@ -383,9 +483,18 @@ export default function create(): Skin {
     let pushes = snapping ? HIST : 0;
     while (histAcc >= HIST_STEP_MS && pushes < 8) { histAcc -= HIST_STEP_MS; pushes++; }
     if (histAcc > HIST_STEP_MS) histAcc = 0;
+    updateSquads();
     for (let p = 0; p < pushes; p++) {
-      d.copyWithin(4, 0, (HIST - 1) * 4);
-      d[0] = pos.x; d[1] = pos.y; d[2] = pos.z; d[3] = spread;
+      for (let r = 0; r <= SQUADS; r++) {
+        const b = r * HIST * 4;
+        d.copyWithin(b + 4, b, b + (HIST - 1) * 4);
+        if (r === 0) {
+          d[b] = pos.x; d[b + 1] = pos.y; d[b + 2] = pos.z; d[b + 3] = spread;
+        } else {
+          const s = r - 1;
+          d[b] = sqPos[s * 3]; d[b + 1] = sqPos[s * 3 + 1]; d[b + 2] = sqPos[s * 3 + 2]; d[b + 3] = sqW[s];
+        }
+      }
     }
     if (pushes) hist.needsUpdate = true;
 
@@ -425,12 +534,11 @@ export default function create(): Skin {
     bright.geometry.getAttribute("aSize").needsUpdate = true;
   }
 
-  const p0 = new Vector3(), p1 = new Vector3(), p2 = new Vector3();
   function updateThreads(): void {
     const pa = threads.geometry.getAttribute("position").array as Float32Array;
     const aa = threads.geometry.getAttribute("aA").array as Float32Array;
     const za = threads.geometry.getAttribute("aSize").array as Float32Array;
-    const ending = mode === "failed" || mode === "cancelled";
+    const ending = ended();
     for (let i = 0; i < THREADS; i++) {
       const base = i * THREAD_PTS;
       if (!thActive[i]) {
@@ -438,6 +546,10 @@ export default function create(): Skin {
         continue;
       }
       const p = (clock - thStart[i]) / thDur[i];
+      if (p >= 0 && !thLaunched[i]) {
+        thLaunched[i] = 1;
+        bPulse[thSlot[i]] = 0.9;
+      }
       if (p >= 1 && thRow[i] >= 0) {
         landRow(thRow[i], thSide[i], thBright[i], false);
         thRow[i] = -1;
@@ -511,6 +623,52 @@ export default function create(): Skin {
     lookAt.y = bestY;
     camDist = bestD;
     clock = saved;
+  }
+
+  /** Render the finished tapestry alone, straight on, and download it as a PNG. */
+  function saveImage(): void {
+    if (!renderer) return;
+    const m = 0.45;
+    const W = 1200, H = Math.round((W * (LOOM_H + 2 * m)) / (LOOM_W + 2 * m));
+    const rt = new WebGLRenderTarget(W, H);
+    rt.texture.colorSpace = SRGBColorSpace;
+    const cy = LOOM_Y + LOOM_H / 2;
+    const cam = new OrthographicCamera(-(LOOM_W / 2 + m), LOOM_W / 2 + m, LOOM_H / 2 + m, -(LOOM_H / 2 + m), 0.1, 50);
+    cam.position.set(0, cy, 10);
+    cam.lookAt(0, cy, 0);
+    const still = new Scene();
+    still.background = new Color(ctx.theme === "dark" ? "#0d1229" : "#1c2b52");
+    const u = (loom.material as ShaderMaterial).uniforms;
+    const keep = [u.uFlare.value, u.uScan.value, u.uShimmer.value, u.uGlow.value];
+    u.uFlare.value = u.uScan.value = u.uShimmer.value = 0;
+    u.uGlow.value = 1.6; // stands in for the bloom the live view adds
+    still.add(loom);
+    renderer.setRenderTarget(rt);
+    renderer.render(still, cam);
+    const buf = new Uint8Array(W * H * 4);
+    renderer.readRenderTargetPixels(rt, 0, 0, W, H, buf);
+    renderer.setRenderTarget(null);
+    scene.add(loom);
+    [u.uFlare.value, u.uScan.value, u.uShimmer.value, u.uGlow.value] = keep;
+    rt.dispose();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = W;
+    canvas.height = H;
+    const g = canvas.getContext("2d")!;
+    const img = g.createImageData(W, H);
+    for (let y = 0; y < H; y++) img.data.set(buf.subarray((H - 1 - y) * W * 4, (H - y) * W * 4), y * W * 4); // WebGL rows are bottom-up
+    for (let i = 3; i < img.data.length; i += 4) img.data[i] = 255;
+    g.putImageData(img, 0, 0);
+    const base = (state.name ?? "").replace(/\.[^.]+$/, "").replace(/[^\w.-]+/g, "-").slice(0, 60) || state.address.slice(0, 12) || "file";
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${base}-tapestry.png`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    }, "image/png");
   }
 
   function setMode(m: Mode): void {
@@ -607,6 +765,18 @@ export default function create(): Skin {
       composer.addPass(bloom);
       composer.addPass(new OutputPass());
       pos.set(side * RING_R * 2.4, 3, 6);
+
+      if (c.size === "full") {
+        saveBtn = document.createElement("button");
+        saveBtn.type = "button";
+        saveBtn.textContent = "Save image";
+        saveBtn.title = "Download the finished tapestry as a PNG";
+        saveBtn.style.cssText =
+          "position:absolute;top:12px;right:12px;display:none;padding:6px 14px;border-radius:8px;border:1px solid #ffffff55;" +
+          "background:#0009;color:#fff;font:500 13px system-ui,sans-serif;cursor:pointer";
+        saveBtn.addEventListener("click", saveImage);
+        c.container.appendChild(saveBtn);
+      }
     },
 
     onEvent(e: VizEvent) {
@@ -741,6 +911,12 @@ export default function create(): Skin {
       (ring.material as ShaderMaterial).uniforms.uAlpha.value = ringAlpha;
       (threads.material as ShaderMaterial).uniforms.uGrey.value = grey;
 
+      const show = verifiedAt < Infinity && mode === "done";
+      if (saveBtn && show !== saveShown) {
+        saveShown = show;
+        saveBtn.style.display = show ? "block" : "none";
+      }
+
       placeCamera();
       composer.render(dt);
       snapping = false;
@@ -775,6 +951,7 @@ export default function create(): Skin {
 
     destroy() {
       if (fallback) fallback.remove();
+      saveBtn?.remove();
       if (!renderer) return;
       scene.traverse((o) => {
         const m = o as Partial<Mesh>;

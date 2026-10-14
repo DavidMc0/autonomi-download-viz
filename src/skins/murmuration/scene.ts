@@ -12,6 +12,9 @@ export const LOOM_H = 5.2;
 export const LOOM_Y = 0.9; // bottom edge
 export const HIST = 64; // flock centre history samples
 export const HIST_STEP_MS = 20;
+/** Escort squads: each owns a row of the history texture (row 0 is the main flock) and 1/12 of the birds. */
+export const SQUADS = 8;
+const ROWS = SQUADS + 1;
 export const BRIGHT = 64; // bright-star slots
 export const THREADS = 24;
 export const THREAD_PTS = 36;
@@ -130,7 +133,7 @@ export function makeBright(): Points {
 // starlings through a shared wave field.
 
 export function makeHistory(): DataTexture {
-  const tex = new DataTexture(new Float32Array(HIST * 4), HIST, 1, RGBAFormat, FloatType);
+  const tex = new DataTexture(new Float32Array(HIST * ROWS * 4), HIST, ROWS, RGBAFormat, FloatType);
   tex.minFilter = tex.magFilter = NearestFilter;
   tex.needsUpdate = true;
   return tex;
@@ -139,6 +142,7 @@ export function makeHistory(): DataTexture {
 export function makeFlock(count: number, rand: () => number, hist: DataTexture): Points {
   const off = new Float32Array(count * 4);
   const rnd = new Float32Array(count * 4);
+  const squad = new Float32Array(count);
   const pos = new Float32Array(count * 3); // unused by the shader; three needs a position attribute
   for (let i = 0; i < count; i++) {
     // A flattened, dense-cored blob.
@@ -154,11 +158,13 @@ export function makeFlock(count: number, rand: () => number, hist: DataTexture):
     rnd[i * 4 + 1] = 0.25 + rand() * 0.5;
     rnd[i * 4 + 2] = rand();
     rnd[i * 4 + 3] = rand();
+    squad[i] = i % 12 < SQUADS ? (i % 12) + 1 : 0;
   }
   const geo = new BufferGeometry();
   geo.setAttribute("position", new BufferAttribute(pos, 3));
   geo.setAttribute("aOff", new BufferAttribute(off, 4));
   geo.setAttribute("aRnd", new BufferAttribute(rnd, 4));
+  geo.setAttribute("aSquad", new BufferAttribute(squad, 1));
   const mat = new ShaderMaterial({
     uniforms: {
       uHist: { value: hist }, uTime: { value: 0 }, uPx: { value: 1 }, uAlpha: { value: 0 },
@@ -166,12 +172,12 @@ export function makeFlock(count: number, rand: () => number, hist: DataTexture):
       uColorA: { value: new Color() }, uColorB: { value: new Color() }, uGrey: { value: 0 },
     },
     vertexShader: /* glsl */ `
-      attribute vec4 aOff; attribute vec4 aRnd;
+      attribute vec4 aOff; attribute vec4 aRnd; attribute float aSquad;
       uniform sampler2D uHist;
       uniform float uTime, uPx, uAlpha, uScatter, uWave, uSize;
       varying float vA; varying float vMix;
       void main() {
-        vec4 h = texture2D(uHist, vec2((aOff.w * ${HIST - 1}.0 + 0.5) / ${HIST}.0, 0.5));
+        vec4 h = texture2D(uHist, vec2((aOff.w * ${HIST - 1}.0 + 0.5) / ${HIST}.0, 0.5 / ${ROWS}.0));
         vec3 o = aOff.xyz;
         float t = uTime * aRnd.y + aRnd.x;
         float c = cos(t * 0.35), s = sin(t * 0.35);
@@ -181,6 +187,11 @@ export function makeFlock(count: number, rand: () => number, hist: DataTexture):
         o.x += uWave * 0.45 * sin(o.z * 1.4 + uTime * 0.61 + o.y * 1.3);
         o.z += uWave * 0.35 * sin(o.x * 1.1 - uTime * 0.47);
         vec3 p = h.xyz + o * h.w;
+        if (aSquad > 0.5) {
+          // An escort squad: a tight streak on its own path, blended in and out by its weight (q.w).
+          vec4 q = texture2D(uHist, vec2((aOff.w * ${Math.floor((HIST - 1) / 2)}.0 + 0.5) / ${HIST}.0, (aSquad + 0.5) / ${ROWS}.0));
+          p = mix(p, q.xyz + o * 0.5, q.w);
+        }
         vec3 dir = normalize(aOff.xyz + vec3(0.0, 0.0001, 0.0));
         p += dir * uScatter * (0.4 + aRnd.w) * 7.0;
         p.y += uScatter * uScatter * (aRnd.z - 0.3) * 3.0;
@@ -351,6 +362,7 @@ export function makeLoom(rows: DataTexture, portrait: DataTexture): Mesh {
         float alpha = clamp(max(shown * uDim, loomA * 2.0), 0.0, 1.0);
         if (alpha < 0.02) discard;
         gl_FragColor = vec4(col, alpha);
+        #include <colorspace_fragment>
       }`,
     transparent: true,
   });

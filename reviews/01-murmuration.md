@@ -77,3 +77,22 @@ The three final frames show three different palettes and three different hash po
 - The smoke test now loads each case from a blank page. Before, a racing reload could run a test against the previous trace and still report "ok".
 - The screen-reader text no longer says "Finding the file, 0 lookup rounds so far" (rounds never arrive in 0.1.2). It now says "Connected. Finding the file."
 - Baseline is marked **approved** in the gallery list.
+
+---
+
+## Follow-up (2026-10-14): David's answers applied
+
+**What changed**
+- **Escort squads.** Once the file is found, each shooting star now starts with part of the flock (one of 8 squads, each 1/12 of the birds) peeling off and streaming out to the star's place on the ring. When the squad arrives, the star launches and the squad rides in with it, just behind its head, to the loom. Then the squad loops back and blends into the main flock. Each squad has its own row in the flock's path texture, so this adds no per-particle CPU work. Skin time is unchanged: 0.42-0.44 ms per frame in the captures.
+- **Timing:** a thread now launches when its squad reaches the star, so each row lands about 0.7-1.6 s after the real `chunk.done` (longer for stars across the ring). Counts and totals are still real.
+- **When there's no squad:** if all 8 squads are out (fast downloads or high replay speeds), after a seek, or with reduced motion, threads fly unescorted as before. "escort squads" in the tweak panel turns the feature off.
+- **Threads come from all around the ring** (the default now).
+- **Save image:** in full mode, a "Save image" button appears once the file is verified. It renders the tapestry on its own, straight on, and downloads it as `<name>-tapestry.png` (1200 × 1003). It was tested in both themes; the export is brightened slightly to stand in for the on-screen bloom.
+- Palette, ring and dusk-blue sky are unchanged, as agreed. The **OGL port waits** until you approve this look.
+- New captures replace the old ones (`murmuration-quick/large/flaky.webm` and `.png`). The smoke test passes 38/38.
+
+**To look at:** `/#murmuration?trace=medium-64mb&size=full` shows single escorts clearly (chunks arrive every 1-5 s). `?trace=large&speed=4` shows several at once.
+
+**Open questions**
+1. **Squad size.** Each squad is 1/12 of the flock now. **A:** keep it. **B:** bigger (1/8), more dramatic, but the main flock thins out when several squads are out. **C:** smaller (1/16), subtler. *I suggest A.*
+2. **Row delay.** Rows land 0.7-1.6 s after the real chunk. **A:** keep it, since the escort is the point. **B:** start the thread at once and let the squad chase it from the flock (no delay, but the squad never reaches the star first). *I suggest A:* the delay is short and steady, and the progress text stays exact.
