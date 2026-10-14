@@ -2,6 +2,14 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-14 · Step 1, Murmuration (build choices, awaiting review)
+
+- **Step 0 approved** ("next"). Baseline is marked approved in `skins.json`.
+- **three.js r186.1, not OGL, for the first version.** It's quicker to iterate the look with `UnrealBloomPass`. A matching OGL bundle measured about 16 kB gzipped against three.js's about 135 kB, so a port is offered in the review (question 4).
+- **The flock is GPU-procedural, not boids.** Each particle trails a CPU-steered centre path (a 64-sample history texture, about 1.3 s long) and folds through a shared wave field, with moving density bands. The cost is the same at 2k or 20k particles, with no per-agent CPU work.
+- **One WebGL context is shared across remounts.** Seeking remounts the skin, so the renderer (and its compiled shaders) is kept, and disposed 4 s after the skin is left.
+- **Shared fixes made while building:** the scrub bar no longer throws in capture mode (it was 0×0), the smoke test loads each case from a blank page (a racing reload could test the previous trace), and `describe()` no longer says "0 lookup rounds so far".
+
 ## 2026-10-14 · Step 0 follow-up (David)
 
 - **Stall threshold raised from 3 s to 5 s.** Real large downloads had 28-40 gaps of 3 s or more in 5 minutes, but only 10-11 of 5 s or more. Shorter pauses show only as a falling rate. The synthetic `flaky` stalls were lengthened to 7 s and 9 s to match.

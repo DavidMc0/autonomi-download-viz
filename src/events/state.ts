@@ -117,7 +117,7 @@ export function progressText(s: SessionState): string {
 export function describeState(s: SessionState): string {
   switch (s.phase) {
     case "connecting": return s.peers ? `Connected to ${s.peers} node${s.peers === 1 ? "" : "s"}.` : "Connecting to the network.";
-    case "finding": return `Connected. Finding the file, ${s.rounds} lookup rounds so far.`;
+    case "finding": return s.rounds ? `Connected. Finding the file, ${s.rounds} lookup rounds so far.` : "Connected. Finding the file.";
     case "downloading": return s.total ? `${percent(s)} percent downloaded.${s.stalled ? " Waiting for the network." : ""}` : "Downloading.";
     default: return progressText(s);
   }

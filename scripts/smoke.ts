@@ -40,8 +40,8 @@ const check = (ok: boolean, what: string) => {
 
 for (const skin of skins) {
   for (const trace of traces) {
+    await page.goto("about:blank"); // a hash-only navigation (or a racing reload) can keep the previous page
     await page.goto(`${base}/#${skin}?trace=${trace}&speed=20`);
-    await page.reload(); // hash-only navigation doesn't re-run the module
     await page.waitForFunction(() => window.__viz?.ready, null, { timeout: 30_000 });
     await page.waitForFunction(() => window.__viz!.player.ended, null, { timeout: 120_000, polling: 250 });
     const end = await state(page);
