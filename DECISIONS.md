@@ -2,6 +2,12 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-14 · Step 2, Robot DJ (build choices, awaiting review)
+
+- **Canvas 2D and Web Audio, not PixiJS and Tone.js.** After the OGL port, bundle size matters: the skin adds 9.9 kB gzipped with no libraries (PixiJS and Tone.js would add roughly 200 kB). Asked as review question 1.
+- **Disks are grouped** so the tower never has more than 60 (155 chunks are 3 per disk). A ring on the deck shows each disk filling. Asked as review question 3.
+- **The drop waits for the last disk to land,** like Murmuration's finale.
+
 ## 2026-10-14 · Murmuration approved and ported to OGL (David)
 
 - **Murmuration approved.** It was ported from three.js to **OGL 1.0.11**: the skin now adds 28.9 kB gzipped instead of 144 kB. The bloom re-implements three's `UnrealBloomPass` and `OutputPass` exactly, so the look is unchanged.
