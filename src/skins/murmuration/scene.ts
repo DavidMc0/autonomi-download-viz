@@ -1,10 +1,9 @@
-// Murmuration's three.js objects and shaders. Everything here is built once per mount; frame() only
-// writes uniforms and a few small CPU-side buffers.
+// Murmuration's OGL meshes and shaders. Everything here is built once per mount; frame() only
+// writes uniforms and a few small CPU-side buffers. All colours are linear; bloom.ts converts the
+// final image to sRGB.
 
-import {
-  AdditiveBlending, BufferAttribute, BufferGeometry, Color, DataTexture, FloatType, Mesh, NearestFilter,
-  PlaneGeometry, Points, RedFormat, RGBAFormat, ShaderMaterial, UnsignedByteType,
-} from "three";
+import { Geometry, Mesh, Plane, Program, Texture, Triangle, type OGLRenderingContext } from "ogl";
+import type { RGB } from "./look";
 
 export const RING_R = 10;
 export const LOOM_W = 6.4;
@@ -19,34 +18,62 @@ export const BRIGHT = 64; // bright-star slots
 export const THREADS = 24;
 export const THREAD_PTS = 36;
 
-const DOT = /* glsl */ `
-  float dot2(vec2 c) { vec2 d = c - 0.5; return dot(d, d); }
+const VERT = /* glsl */ `#version 300 es
+precision highp float;
+uniform mat4 modelViewMatrix;
+uniform mat4 projectionMatrix;
+`;
+const FRAG = /* glsl */ `#version 300 es
+precision highp float;
+out vec4 fragColor;
+float dot2(vec2 c) { vec2 d = c - 0.5; return dot(d, d); }
 `;
 
-// ---------------------------------------------------------------------------
-// Sky: a full-screen gradient drawn first (colours are linear, like everything else in the scene).
+/** Additive light, as three's AdditiveBlending. */
+function additive(gl: OGLRenderingContext, p: Program): Program {
+  p.setBlendFunc(gl.SRC_ALPHA, gl.ONE);
+  return p;
+}
 
-export function makeSky(top: string, bottom: string): Mesh {
-  const mat = new ShaderMaterial({
-    uniforms: { uTop: { value: new Color(top) }, uBottom: { value: new Color(bottom) } },
-    vertexShader: /* glsl */ `
-      varying float vY;
-      void main() { vY = position.y * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.9999, 1.0); }`,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uTop, uBottom; varying float vY;
-      void main() { gl_FragColor = vec4(mix(uBottom, uTop, smoothstep(0.0, 1.0, vY)), 1.0); }`,
-    depthTest: false, depthWrite: false,
+function points(gl: OGLRenderingContext, geometry: Geometry, program: Program, renderOrder: number): Mesh {
+  return new Mesh(gl, { geometry, program, mode: gl.POINTS, frustumCulled: false, renderOrder });
+}
+
+/** A float or byte data texture, nearest-sampled, no mipmaps, rows bottom-up as uploaded. */
+export function dataTexture(
+  gl: OGLRenderingContext, image: Float32Array | Uint8Array, width: number, height: number, float: boolean,
+): Texture {
+  const g2 = gl as WebGL2RenderingContext; // the skin only runs on WebGL2
+  return new Texture(gl, {
+    image, width, height,
+    type: float ? g2.FLOAT : g2.UNSIGNED_BYTE,
+    format: float ? g2.RGBA : g2.RED,
+    internalFormat: float ? g2.RGBA32F : g2.R8,
+    minFilter: gl.NEAREST, magFilter: gl.NEAREST, generateMipmaps: false, flipY: false, unpackAlignment: 1,
   });
-  const mesh = new Mesh(new PlaneGeometry(2, 2), mat);
-  mesh.frustumCulled = false;
-  mesh.renderOrder = -1;
-  return mesh;
 }
 
 // ---------------------------------------------------------------------------
-// Ring of faint stars (ring-local coordinates; the parent group turns).
+// Sky: a full-screen gradient drawn first.
 
-export function makeRing(count: number, rand: () => number): Points {
+export function makeSky(gl: OGLRenderingContext, top: RGB, bottom: RGB): Mesh {
+  const program = new Program(gl, {
+    vertex: /* glsl */ `#version 300 es
+      in vec2 position; out float vY;
+      void main() { vY = position.y * 0.5 + 0.5; gl_Position = vec4(position, 0.9999, 1.0); }`,
+    fragment: /* glsl */ `${FRAG}
+      uniform vec3 uTop, uBottom; in float vY;
+      void main() { fragColor = vec4(mix(uBottom, uTop, smoothstep(0.0, 1.0, vY)), 1.0); }`,
+    uniforms: { uTop: { value: top }, uBottom: { value: bottom } },
+    depthTest: false, depthWrite: false, cullFace: false,
+  });
+  return new Mesh(gl, { geometry: new Triangle(gl), program, frustumCulled: false, renderOrder: -1 });
+}
+
+// ---------------------------------------------------------------------------
+// Ring of faint stars (ring-local coordinates; the parent transform turns).
+
+export function makeRing(gl: OGLRenderingContext, count: number, rand: () => number): Mesh {
   const pos = new Float32Array(count * 3);
   const size = new Float32Array(count);
   const bright = new Float32Array(count);
@@ -62,17 +89,14 @@ export function makeRing(count: number, rand: () => number): Points {
     bright[i] = 0.12 + rand() * rand() * 0.6;
     phase[i] = rand();
   }
-  const geo = new BufferGeometry();
-  geo.setAttribute("position", new BufferAttribute(pos, 3));
-  geo.setAttribute("aSize", new BufferAttribute(size, 1));
-  geo.setAttribute("aBright", new BufferAttribute(bright, 1));
-  geo.setAttribute("aPhase", new BufferAttribute(phase, 1));
-  const mat = new ShaderMaterial({
-    uniforms: { uTime: { value: 0 }, uPx: { value: 1 }, uAlpha: { value: 1 }, uColor: { value: new Color(0.75, 0.82, 1) } },
-    vertexShader: /* glsl */ `
-      attribute float aSize; attribute float aBright; attribute float aPhase;
+  const geometry = new Geometry(gl, {
+    position: { size: 3, data: pos }, aSize: { size: 1, data: size }, aBright: { size: 1, data: bright }, aPhase: { size: 1, data: phase },
+  });
+  const program = additive(gl, new Program(gl, {
+    vertex: /* glsl */ `${VERT}
+      in vec3 position; in float aSize; in float aBright; in float aPhase;
       uniform float uTime, uPx, uAlpha;
-      varying float vA;
+      out float vA;
       void main() {
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mv;
@@ -80,70 +104,65 @@ export function makeRing(count: number, rand: () => number): Points {
         vA = aBright * tw * uAlpha;
         gl_PointSize = max(1.0, aSize * uPx * 24.0 / -mv.z);
       }`,
-    fragmentShader: /* glsl */ `
-      uniform vec3 uColor; varying float vA;
-      ${DOT}
+    fragment: /* glsl */ `${FRAG}
+      uniform vec3 uColor; in float vA;
       void main() {
         float a = (1.0 - smoothstep(0.0, 0.25, dot2(gl_PointCoord))) * vA;
-        gl_FragColor = vec4(uColor * a, 1.0);
+        fragColor = vec4(uColor * a, 1.0);
       }`,
-    transparent: true, depthWrite: false, blending: AdditiveBlending,
-  });
-  return new Points(geo, mat);
+    // three's Color(0.75, 0.82, 1) is already linear
+    uniforms: { uTime: { value: 0 }, uPx: { value: 1 }, uAlpha: { value: 1 }, uColor: { value: [0.75, 0.82, 1] } },
+    transparent: true, depthWrite: false, cullFace: false,
+  }));
+  return points(gl, geometry, program, 0);
 }
 
 // ---------------------------------------------------------------------------
 // Bright stars: seeds, the file's target, lookup flickers, chunk origins. CPU-updated (64 slots).
 
-export function makeBright(): Points {
-  const geo = new BufferGeometry();
-  geo.setAttribute("position", new BufferAttribute(new Float32Array(BRIGHT * 3), 3));
-  geo.setAttribute("aColor", new BufferAttribute(new Float32Array(BRIGHT * 3), 3));
-  geo.setAttribute("aSize", new BufferAttribute(new Float32Array(BRIGHT), 1));
-  geo.setAttribute("aBright", new BufferAttribute(new Float32Array(BRIGHT), 1));
-  const mat = new ShaderMaterial({
-    uniforms: { uPx: { value: 1 } },
-    vertexShader: /* glsl */ `
-      attribute vec3 aColor; attribute float aSize; attribute float aBright;
+export function makeBright(gl: OGLRenderingContext): Mesh {
+  const geometry = new Geometry(gl, {
+    position: { size: 3, data: new Float32Array(BRIGHT * 3) },
+    aColor: { size: 3, data: new Float32Array(BRIGHT * 3) },
+    aSize: { size: 1, data: new Float32Array(BRIGHT) },
+    aBright: { size: 1, data: new Float32Array(BRIGHT) },
+  });
+  const program = additive(gl, new Program(gl, {
+    vertex: /* glsl */ `${VERT}
+      in vec3 position; in vec3 aColor; in float aSize; in float aBright;
       uniform float uPx;
-      varying vec3 vC; varying float vA;
+      out vec3 vC; out float vA;
       void main() {
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mv;
         vC = aColor; vA = aBright;
         gl_PointSize = aBright <= 0.001 ? 0.0 : max(2.0, aSize * uPx * 24.0 / -mv.z);
       }`,
-    fragmentShader: /* glsl */ `
-      varying vec3 vC; varying float vA;
-      ${DOT}
+    fragment: /* glsl */ `${FRAG}
+      in vec3 vC; in float vA;
       void main() {
         float d = dot2(gl_PointCoord);
         float a = (exp(-d * 60.0) + 0.35 * exp(-d * 12.0)) * (1.0 - smoothstep(0.18, 0.25, d)) * vA;
-        gl_FragColor = vec4(vC * a, 1.0);
+        fragColor = vec4(vC * a, 1.0);
       }`,
-    transparent: true, depthWrite: false, blending: AdditiveBlending,
-  });
-  const pts = new Points(geo, mat);
-  pts.frustumCulled = false;
-  return pts;
+    uniforms: { uPx: { value: 1 } },
+    transparent: true, depthWrite: false, cullFace: false,
+  }));
+  return points(gl, geometry, program, 0);
 }
 
 // ---------------------------------------------------------------------------
 // The flock: GPU particles that trail a CPU-steered centre path (a history texture), folding like
 // starlings through a shared wave field.
 
-export function makeHistory(): DataTexture {
-  const tex = new DataTexture(new Float32Array(HIST * ROWS * 4), HIST, ROWS, RGBAFormat, FloatType);
-  tex.minFilter = tex.magFilter = NearestFilter;
-  tex.needsUpdate = true;
-  return tex;
+export function makeHistory(gl: OGLRenderingContext): Texture {
+  return dataTexture(gl, new Float32Array(HIST * ROWS * 4), HIST, ROWS, true);
 }
 
-export function makeFlock(count: number, rand: () => number, hist: DataTexture): Points {
+export function makeFlock(gl: OGLRenderingContext, count: number, rand: () => number, hist: Texture): Mesh {
   const off = new Float32Array(count * 4);
   const rnd = new Float32Array(count * 4);
   const squad = new Float32Array(count);
-  const pos = new Float32Array(count * 3); // unused by the shader; three needs a position attribute
   for (let i = 0; i < count; i++) {
     // A flattened, dense-cored blob.
     let x = 0, y = 0, z = 0;
@@ -160,24 +179,15 @@ export function makeFlock(count: number, rand: () => number, hist: DataTexture):
     rnd[i * 4 + 3] = rand();
     squad[i] = i % 12 < SQUADS ? (i % 12) + 1 : 0;
   }
-  const geo = new BufferGeometry();
-  geo.setAttribute("position", new BufferAttribute(pos, 3));
-  geo.setAttribute("aOff", new BufferAttribute(off, 4));
-  geo.setAttribute("aRnd", new BufferAttribute(rnd, 4));
-  geo.setAttribute("aSquad", new BufferAttribute(squad, 1));
-  const mat = new ShaderMaterial({
-    uniforms: {
-      uHist: { value: hist }, uTime: { value: 0 }, uPx: { value: 1 }, uAlpha: { value: 0 },
-      uScatter: { value: 0 }, uWave: { value: 0.6 }, uSize: { value: 1 },
-      uColorA: { value: new Color() }, uColorB: { value: new Color() }, uGrey: { value: 0 },
-    },
-    vertexShader: /* glsl */ `
-      attribute vec4 aOff; attribute vec4 aRnd; attribute float aSquad;
+  const geometry = new Geometry(gl, { aOff: { size: 4, data: off }, aRnd: { size: 4, data: rnd }, aSquad: { size: 1, data: squad } });
+  const program = additive(gl, new Program(gl, {
+    vertex: /* glsl */ `${VERT}
+      in vec4 aOff; in vec4 aRnd; in float aSquad;
       uniform sampler2D uHist;
       uniform float uTime, uPx, uAlpha, uScatter, uWave, uSize;
-      varying float vA; varying float vMix;
+      out float vA; out float vMix;
       void main() {
-        vec4 h = texture2D(uHist, vec2((aOff.w * ${HIST - 1}.0 + 0.5) / ${HIST}.0, 0.5 / ${ROWS}.0));
+        vec4 h = texture(uHist, vec2((aOff.w * ${HIST - 1}.0 + 0.5) / ${HIST}.0, 0.5 / ${ROWS}.0));
         vec3 o = aOff.xyz;
         float t = uTime * aRnd.y + aRnd.x;
         float c = cos(t * 0.35), s = sin(t * 0.35);
@@ -189,7 +199,7 @@ export function makeFlock(count: number, rand: () => number, hist: DataTexture):
         vec3 p = h.xyz + o * h.w;
         if (aSquad > 0.5) {
           // An escort squad: a tight streak on its own path, blended in and out by its weight (q.w).
-          vec4 q = texture2D(uHist, vec2((aOff.w * ${Math.floor((HIST - 1) / 2)}.0 + 0.5) / ${HIST}.0, (aSquad + 0.5) / ${ROWS}.0));
+          vec4 q = texture(uHist, vec2((aOff.w * ${Math.floor((HIST - 1) / 2)}.0 + 0.5) / ${HIST}.0, (aSquad + 0.5) / ${ROWS}.0));
           p = mix(p, q.xyz + o * 0.5, q.w);
         }
         vec3 dir = normalize(aOff.xyz + vec3(0.0, 0.0001, 0.0));
@@ -203,101 +213,81 @@ export function makeFlock(count: number, rand: () => number, hist: DataTexture):
         vMix = aRnd.w;
         gl_PointSize = max(1.0, uSize * (0.7 + aRnd.z * 0.6) * uPx * 24.0 / -mv.z);
       }`,
-    fragmentShader: /* glsl */ `
+    fragment: /* glsl */ `${FRAG}
       uniform vec3 uColorA, uColorB; uniform float uGrey;
-      varying float vA; varying float vMix;
-      ${DOT}
+      in float vA; in float vMix;
       void main() {
         float a = (1.0 - smoothstep(0.04, 0.25, dot2(gl_PointCoord))) * vA;
         vec3 c = mix(uColorA, uColorB, step(0.7, vMix));
         c = mix(c, vec3(dot(c, vec3(0.3, 0.5, 0.2))) * 0.6, uGrey);
-        gl_FragColor = vec4(c * a, 1.0);
+        fragColor = vec4(c * a, 1.0);
       }`,
-    transparent: true, depthWrite: false, blending: AdditiveBlending,
-  });
-  const pts = new Points(geo, mat);
-  pts.frustumCulled = false;
-  return pts;
+    uniforms: {
+      uHist: { value: hist }, uTime: { value: 0 }, uPx: { value: 1 }, uAlpha: { value: 0 },
+      uScatter: { value: 0 }, uWave: { value: 0.6 }, uSize: { value: 1 },
+      uColorA: { value: [1, 1, 1] }, uColorB: { value: [1, 1, 1] }, uGrey: { value: 0 },
+    },
+    transparent: true, depthWrite: false, cullFace: false,
+  }));
+  return points(gl, geometry, program, 3);
 }
 
 // ---------------------------------------------------------------------------
 // Threads of light flying from a star into the loom (CPU-updated, world coordinates).
 
-export function makeThreads(): Points {
+export function makeThreads(gl: OGLRenderingContext): Mesh {
   const n = THREADS * THREAD_PTS;
-  const geo = new BufferGeometry();
-  geo.setAttribute("position", new BufferAttribute(new Float32Array(n * 3), 3));
-  geo.setAttribute("aA", new BufferAttribute(new Float32Array(n), 1));
-  geo.setAttribute("aSize", new BufferAttribute(new Float32Array(n), 1));
-  const mat = new ShaderMaterial({
-    uniforms: { uPx: { value: 1 }, uColor: { value: new Color() }, uGrey: { value: 0 } },
-    vertexShader: /* glsl */ `
-      attribute float aA; attribute float aSize;
+  const geometry = new Geometry(gl, {
+    position: { size: 3, data: new Float32Array(n * 3) },
+    aA: { size: 1, data: new Float32Array(n) },
+    aSize: { size: 1, data: new Float32Array(n) },
+  });
+  const program = additive(gl, new Program(gl, {
+    vertex: /* glsl */ `${VERT}
+      in vec3 position; in float aA; in float aSize;
       uniform float uPx;
-      varying float vA;
+      out float vA;
       void main() {
         vec4 mv = modelViewMatrix * vec4(position, 1.0);
         gl_Position = projectionMatrix * mv;
         vA = aA;
         gl_PointSize = aA <= 0.001 ? 0.0 : max(1.5, aSize * uPx * 24.0 / -mv.z);
       }`,
-    fragmentShader: /* glsl */ `
+    fragment: /* glsl */ `${FRAG}
       uniform vec3 uColor; uniform float uGrey;
-      varying float vA;
-      ${DOT}
+      in float vA;
       void main() {
         float a = (1.0 - smoothstep(0.0, 0.25, dot2(gl_PointCoord))) * vA;
         vec3 c = mix(uColor, vec3(0.5), uGrey);
-        gl_FragColor = vec4(c * a, 1.0);
+        fragColor = vec4(c * a, 1.0);
       }`,
-    transparent: true, depthWrite: false, blending: AdditiveBlending,
-  });
-  const pts = new Points(geo, mat);
-  pts.frustumCulled = false;
-  return pts;
+    uniforms: { uPx: { value: 1 }, uColor: { value: [1, 1, 1] }, uGrey: { value: 0 } },
+    transparent: true, depthWrite: false, cullFace: false,
+  }));
+  return points(gl, geometry, program, 4);
 }
 
 // ---------------------------------------------------------------------------
 // The loom and tapestry. Each chunk reveals one row band of a seeded woven image; after
 // verification the image settles into a portrait of the file's hash.
 
-export function makeRowsTexture(total: number): DataTexture {
+export function makeRowsTexture(gl: OGLRenderingContext, total: number): Texture {
   const w = 64, h = Math.max(1, Math.ceil(total / w));
-  const tex = new DataTexture(new Float32Array(w * h * 4), w, h, RGBAFormat, FloatType);
-  tex.minFilter = tex.magFilter = NearestFilter;
-  tex.needsUpdate = true;
-  return tex;
+  return dataTexture(gl, new Float32Array(w * h * 4), w, h, true);
 }
 
-export function makePortraitTexture(cells: Uint8Array): DataTexture {
-  const tex = new DataTexture(cells, 8, 16, RedFormat, UnsignedByteType);
-  tex.minFilter = tex.magFilter = NearestFilter;
-  tex.needsUpdate = true;
-  return tex;
-}
-
-export function makeLoom(rows: DataTexture, portrait: DataTexture): Mesh {
-  const geo = new PlaneGeometry(LOOM_W, LOOM_H);
-  const mat = new ShaderMaterial({
-    uniforms: {
-      uRows: { value: rows }, uRowsW: { value: 64 }, uRowsH: { value: 1 }, uTotal: { value: 1 },
-      uPortrait: { value: portrait },
-      uTime: { value: 0 }, uAppear: { value: 0 }, uShimmer: { value: 0 }, uScan: { value: 0 }, uScanPos: { value: 0 },
-      uFlare: { value: 0 }, uGrey: { value: 0 }, uHashMix: { value: 0 }, uDim: { value: 1 }, uWarpFade: { value: 1 },
-      uReveal: { value: 0.45 }, uPattern: { value: 0 }, uDetail: { value: [0, 0, 0, 0] },
-      uC0: { value: new Color() }, uC1: { value: new Color() }, uC2: { value: new Color() }, uC3: { value: new Color() },
-      uWarpC: { value: new Color() }, uGlow: { value: 1 },
-    },
-    vertexShader: /* glsl */ `
-      varying vec2 vUv;
+export function makeLoom(gl: OGLRenderingContext, rows: Texture, portrait: Texture): Mesh {
+  const program = new Program(gl, {
+    vertex: /* glsl */ `${VERT}
+      in vec3 position; in vec2 uv; out vec2 vUv;
       void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
-    fragmentShader: /* glsl */ `
+    fragment: /* glsl */ `${FRAG}
       uniform sampler2D uRows, uPortrait;
       uniform float uRowsW, uRowsH, uTotal, uTime, uAppear, uShimmer, uScan, uScanPos, uFlare, uGrey;
-      uniform float uHashMix, uDim, uWarpFade, uReveal, uPattern, uGlow;
+      uniform float uHashMix, uDim, uWarpFade, uReveal, uPattern, uGlow, uSRGB;
       uniform vec4 uDetail;
       uniform vec3 uC0, uC1, uC2, uC3, uWarpC;
-      varying vec2 vUv;
+      in vec2 vUv;
       vec3 pal(float i) { return i < 0.5 ? uC0 : i < 1.5 ? uC1 : i < 2.5 ? uC2 : uC3; }
       void main() {
         vec2 uv = vUv;
@@ -319,7 +309,7 @@ export function makeLoom(rows: DataTexture, portrait: DataTexture): Mesh {
         // The hash portrait: 16 × 16, mirrored left to right.
         vec2 pc = floor(uv * 16.0);
         float px = pc.x < 8.0 ? pc.x : 15.0 - pc.x;
-        float pidx = floor(texture2D(uPortrait, vec2((px + 0.5) / 8.0, (pc.y + 0.5) / 16.0)).r * 3.0 + 0.5);
+        float pidx = floor(texture(uPortrait, vec2((px + 0.5) / 8.0, (pc.y + 0.5) / 16.0)).r * 3.0 + 0.5);
         vec3 weftC = mix(pal(idx), pal(pidx), uHashMix);
 
         // Over/under: a 2/2 twill decides which thread shows in each cell.
@@ -329,7 +319,7 @@ export function makeLoom(rows: DataTexture, portrait: DataTexture): Mesh {
 
         // Which rows are woven (each chunk is one row band, bottom to top).
         float row = min(floor(uv.y * uTotal), uTotal - 1.0);
-        vec4 d = texture2D(uRows, vec2((mod(row, uRowsW) + 0.5) / uRowsW, (floor(row / uRowsW) + 0.5) / uRowsH));
+        vec4 d = texture(uRows, vec2((mod(row, uRowsW) + 0.5) / uRowsW, (floor(row / uRowsW) + 0.5) / uRowsH));
         float reveal = d.a > 0.5 ? clamp((uTime - d.r) / uReveal, 0.0, 1.0) : 0.0;
         float xs = d.b > 0.5 ? 1.0 - uv.x : uv.x;
         float shown = d.a > 0.5 ? 1.0 - smoothstep(reveal * 1.1 - 0.1, reveal * 1.1 - 0.06, xs) : 0.0;
@@ -361,12 +351,22 @@ export function makeLoom(rows: DataTexture, portrait: DataTexture): Mesh {
         col = mix(col, vec3(dot(col, vec3(0.3, 0.5, 0.2))) * 0.55, uGrey);
         float alpha = clamp(max(shown * uDim, loomA * 2.0), 0.0, 1.0);
         if (alpha < 0.02) discard;
-        gl_FragColor = vec4(col, alpha);
-        #include <colorspace_fragment>
+        // The saved image is drawn straight to an 8-bit target, so it is encoded to sRGB here.
+        if (uSRGB > 0.5) col = mix(pow(col, vec3(0.41666)) * 1.055 - 0.055, col * 12.92, vec3(lessThanEqual(col, vec3(0.0031308))));
+        fragColor = vec4(col, alpha);
       }`,
-    transparent: true,
+    uniforms: {
+      uRows: { value: rows }, uRowsW: { value: 64 }, uRowsH: { value: 1 }, uTotal: { value: 1 },
+      uPortrait: { value: portrait },
+      uTime: { value: 0 }, uAppear: { value: 0 }, uShimmer: { value: 0 }, uScan: { value: 0 }, uScanPos: { value: 0 },
+      uFlare: { value: 0 }, uGrey: { value: 0 }, uHashMix: { value: 0 }, uDim: { value: 1 }, uWarpFade: { value: 1 },
+      uReveal: { value: 0.45 }, uPattern: { value: 0 }, uDetail: { value: [0, 0, 0, 0] },
+      uC0: { value: [1, 1, 1] }, uC1: { value: [1, 1, 1] }, uC2: { value: [1, 1, 1] }, uC3: { value: [1, 1, 1] },
+      uWarpC: { value: [1, 1, 1] }, uGlow: { value: 1 }, uSRGB: { value: 0 },
+    },
+    transparent: true, cullFace: false, depthFunc: gl.LEQUAL,
   });
-  const mesh = new Mesh(geo, mat);
+  const mesh = new Mesh(gl, { geometry: new Plane(gl, { width: LOOM_W, height: LOOM_H }), program, frustumCulled: false, renderOrder: 1 });
   mesh.position.set(0, LOOM_Y + LOOM_H / 2, 0);
   return mesh;
 }

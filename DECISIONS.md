@@ -2,6 +2,12 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-14 · Murmuration approved and ported to OGL (David)
+
+- **Murmuration approved.** It was ported from three.js to **OGL 1.0.11**: the skin now adds 28.9 kB gzipped instead of 144 kB. The bloom re-implements three's `UnrealBloomPass` and `OutputPass` exactly, so the look is unchanged.
+- **Finale timing fix:** the flare and hash portrait now wait for the last thread to land (with escorts it could land after `file.verified`). "Save image" appears once the portrait has settled.
+- **Step 2 (Robot DJ) started** on David's go-ahead.
+
 ## 2026-10-14 · Step 1 follow-up (David)
 
 - **Squad size stays at 1/12** of the flock, and **the wait stays**: a thread launches only when its squad reaches the star.

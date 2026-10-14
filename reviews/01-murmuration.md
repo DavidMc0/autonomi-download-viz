@@ -101,3 +101,12 @@ The three final frames show three different palettes and three different hash po
 
 - Squads stay at 1/12 of the flock, and the thread waits for its squad.
 - The illustrative note is no longer drawn over the visualisation, for all skins. It now sits below the stage, under the progress text, as "Illustrative: the flock's path and the star positions". The captures were re-recorded without it.
+
+## Port to OGL (2026-10-14, after approval)
+
+**What changed**
+- **three.js replaced with OGL 1.0.11.** The skin now adds **28.9 kB** gzipped, down from 144 kB.
+- **Bloom:** `bloom.ts` re-implements three's `UnrealBloomPass` and `OutputPass` exactly: the same half-resolution high pass, five gaussian mips (kernels 6-22), composite weights, and linear-to-sRGB output. Shaders, timings, tweakables and behaviour are otherwise unchanged. Old and new captures of the same moments match closely; the tapestry reads very slightly deeper in colour.
+- **Fix found while comparing:** with escorts, the last row could land after `file.verified`, so the flare and hash portrait played over an unfinished tapestry (both versions did this). The finale now starts when the last thread lands. "Save image" appears once the portrait has settled, and always exports the settled portrait.
+- **Requirements:** WebGL2 with float render targets (`EXT_color_buffer_float`), as three's composer also needed. Without them the skin shows a short "needs WebGL" message.
+- **Checks:** smoke test 38/38 and Save image in both themes. New captures replace the three.js ones. Skin main-thread time is 0.34-0.39 ms per frame in the captures; over the whole `large` trace at 1× it is **0.29 ms mean, 0.40 ms p95**.

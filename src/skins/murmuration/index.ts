@@ -8,23 +8,18 @@
 // bits of their addresses). Illustrative: the other stars, the flock's path while searching (SDK
 // 0.1.2 sends no lookup rounds) and which star each thread comes from.
 
-import {
-  Color, Group, OrthographicCamera, PerspectiveCamera, Scene, SRGBColorSpace, Vector2, Vector3, WebGLRenderer, WebGLRenderTarget,
-  type DataTexture, type Mesh, type Points, type ShaderMaterial,
-} from "three";
-import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
-import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
-import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
+import { Camera, Renderer, RenderTarget, Transform, Vec3, type Mesh, type OGLRenderingContext, type Texture } from "ogl";
 import { prng, seedFromAddress } from "../../events/seed";
 import { describeState, initialState, reduce } from "../../events/state";
 import type { VizEvent } from "../../events/types";
 import { defaultParams, type Skin, type SkinContext, type TweakDef } from "../types";
-import { makeLook, portraitCells, ringAngle, type Look } from "./look";
+import { Bloom, disposeTarget } from "./bloom";
+import { hex, makeLook, mix, portraitCells, ringAngle, type Look } from "./look";
 import {
   BRIGHT, HIST, HIST_STEP_MS, LOOM_H, LOOM_W, LOOM_Y, RING_R, SQUADS, THREAD_PTS, THREADS,
-  makeBright, makeFlock, makeSky, makeHistory, makeLoom, makePortraitTexture, makeRing, makeRowsTexture, makeThreads,
+  dataTexture, makeBright, makeFlock, makeHistory, makeLoom, makeRing, makeRowsTexture, makeSky, makeThreads,
 } from "./scene";
+import { V3 } from "./vec";
 
 const tweakables: TweakDef[] = [
   { key: "particles", label: "particles", kind: "select", options: { "auto (by size and device)": "auto", "2,000": "2000", "5,000": "5000", "10,000": "10000", "20,000": "20000" }, default: "auto" },
@@ -44,16 +39,18 @@ const SEEDS = 0, SEED_MAX = 16, TARGET = 16, FLICKER = 17, FLICKER_N = 24, ORIGI
 type Mode = "idle" | "arrive" | "peer" | "search" | "atFile" | "download" | "stall" | "checking" | "done" | "failed" | "cancelled";
 
 // One WebGL context for every Murmuration instance. Seeking remounts the skin, so this keeps scrubbing
-// cheap (compiled shaders are cached by the renderer) and never piles up contexts.
-let shared: { renderer: WebGLRenderer; timer?: ReturnType<typeof setTimeout> } | null = null;
+// cheap and never piles up contexts.
+let shared: { renderer: Renderer; timer?: ReturnType<typeof setTimeout> } | null = null;
 
-function acquireRenderer(): WebGLRenderer {
+function acquireRenderer(): Renderer {
   if (shared) {
     clearTimeout(shared.timer);
     return shared.renderer;
   }
-  const renderer = new WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
-  renderer.domElement.style.cssText = "display:block;width:100%;height:100%";
+  const renderer = new Renderer({ webgl: 2, alpha: false, antialias: false, powerPreference: "high-performance" });
+  // Half-float render targets (the bloom chain) need WebGL2 and EXT_color_buffer_float.
+  if (!renderer.isWebgl2 || !renderer.gl.getExtension("EXT_color_buffer_float")) throw new Error("WebGL2 with float render targets is needed");
+  renderer.gl.canvas.style.cssText = "display:block;width:100%;height:100%";
   shared = { renderer };
   return renderer;
 }
@@ -61,12 +58,18 @@ function acquireRenderer(): WebGLRenderer {
 function releaseRenderer(): void {
   if (!shared) return;
   const s = shared;
-  s.renderer.domElement.remove();
+  s.renderer.gl.canvas.remove();
   s.timer = setTimeout(() => {
-    s.renderer.dispose();
-    s.renderer.forceContextLoss();
+    s.renderer.gl.getExtension("WEBGL_lose_context")?.loseContext();
     if (shared === s) shared = null;
   }, 4000);
+}
+
+/** Free a mesh's GPU buffers and program. */
+function freeMesh(m: Mesh): void {
+  m.setParent(null);
+  m.geometry.remove();
+  m.program.remove();
 }
 
 const ease = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
@@ -83,19 +86,20 @@ export default function create(): Skin {
   let params = defaultParams(tweakables);
   const state = initialState();
 
-  let renderer: WebGLRenderer | null = null;
+  let renderer: Renderer | null = null;
+  let gl!: OGLRenderingContext;
   let fallback: HTMLElement | null = null;
-  const scene = new Scene();
-  const camera = new PerspectiveCamera(36, 1.6, 0.5, 200);
-  const ringGroup = new Group();
-  let composer!: EffectComposer;
-  let bloom!: UnrealBloomPass;
-  let ring!: Points, bright!: Points, flock!: Points, threads!: Points, loom!: Mesh;
-  let hist!: DataTexture, rowsTex!: DataTexture, portraitTex!: DataTexture;
+  const scene = new Transform();
+  const ringGroup = new Transform();
+  let camera!: Camera;
+  let bloom!: Bloom;
+  let sky!: Mesh, ring!: Mesh, bright!: Mesh, flock!: Mesh, threads!: Mesh, loom!: Mesh;
+  let hist!: Texture, rowsTex!: Texture, portraitTex!: Texture;
   let look!: Look;
   let flockCount = 0;
   let w = 0, px = 1;
-  const lookAt = new Vector3(0, 2.3, 0);
+  const lookAt = new Vec3(0, 2.3, 0);
+  const proj = new Vec3();
   const PITCH = 0.36;
   let camDist = 24;
 
@@ -124,8 +128,8 @@ export default function create(): Skin {
   let flickerNext = 0, originNext = 0;
 
   // Flock steering (world coordinates).
-  const pos = new Vector3(), vel = new Vector3(), goal = new Vector3(), tmp = new Vector3();
-  const p0 = new Vector3(), p1 = new Vector3(), p2 = new Vector3();
+  const pos = new V3(), vel = new V3(), goal = new V3(), tmp = new V3();
+  const p0 = new V3(), p1 = new V3(), p2 = new V3();
   let spread = 1.6, alpha = 0, scatter = 0, scatterPulse = 0, wave = 0.6;
   let orbit = 0, histAcc = 0;
   let mode: Mode = "idle";
@@ -161,11 +165,12 @@ export default function create(): Skin {
 
   // Moments.
   let loomAt = Infinity, mapAt = Infinity, verifiedAt = Infinity, endAt = Infinity, checkingAt = Infinity;
+  let hashReady = false; // file.verified seen; the finale waits until the last thread has landed
   let shimmer = 0, scan = 0, grey = 0, dim = 1, warpFade = 1, ringAlpha = 0.6;
 
   // ---------------------------------------------------------------------------
 
-  function worldOf(lx: number, ly: number, lz: number, out: Vector3): Vector3 {
+  function worldOf(lx: number, ly: number, lz: number, out: V3): V3 {
     const c = Math.cos(ringRot), s = Math.sin(ringRot);
     return out.set(lx * c + lz * s, ly, -lx * s + lz * c);
   }
@@ -174,7 +179,7 @@ export default function create(): Skin {
     bLocal[slot * 3 + 1] = y;
     bLocal[slot * 3 + 2] = Math.sin(ang) * r;
   }
-  function slotWorld(slot: number, out: Vector3): Vector3 {
+  function slotWorld(slot: number, out: V3): V3 {
     return worldOf(bLocal[slot * 3], bLocal[slot * 3 + 1], bLocal[slot * 3 + 2], out);
   }
 
@@ -188,59 +193,54 @@ export default function create(): Skin {
   function buildFlock(): void {
     const n = autoCount();
     if (flock && n === flockCount) return;
-    if (flock) {
-      scene.remove(flock);
-      flock.geometry.dispose();
-      (flock.material as ShaderMaterial).dispose();
-    }
+    if (flock) freeMesh(flock);
     flockCount = n;
-    flock = makeFlock(n, prng(ctx.seed, 3), hist);
-    flock.renderOrder = 3;
-    (flock.material as ShaderMaterial).uniforms.uPx.value = px;
-    (flock.material as ShaderMaterial).uniforms.uSize.value = ctx.size === "full" ? 1 : 1.25;
+    flock = makeFlock(gl, n, prng(ctx.seed, 3), hist);
+    flock.program.uniforms.uPx.value = px;
+    flock.program.uniforms.uSize.value = ctx.size === "full" ? 1 : 1.25;
     applyLook();
-    scene.add(flock);
+    flock.setParent(scene);
   }
 
   function applyLook(): void {
     look = makeLook(ctx.seed, String(params.palette), String(params.weave));
     if (flock) {
-      const u = (flock.material as ShaderMaterial).uniforms;
-      u.uColorA.value.copy(look.flockA);
-      u.uColorB.value.copy(look.flockB);
+      const u = flock.program.uniforms;
+      u.uColorA.value = look.flockA;
+      u.uColorB.value = look.flockB;
     }
     if (loom) {
-      const u = (loom.material as ShaderMaterial).uniforms;
-      look.weft.forEach((c, i) => u[`uC${i}`].value.copy(c));
-      u.uWarpC.value.copy(look.warp);
+      const u = loom.program.uniforms;
+      look.weft.forEach((c, i) => (u[`uC${i}`].value = c));
+      u.uWarpC.value = look.warp;
       u.uPattern.value = look.pattern;
       u.uDetail.value = look.detail;
     }
-    if (threads) (threads.material as ShaderMaterial).uniforms.uColor.value.copy(look.warp).lerp(look.weft[1], 0.3);
-    const col = bright.geometry.getAttribute("aColor").array as Float32Array;
+    if (threads) threads.program.uniforms.uColor.value = mix(look.warp, look.weft[1], 0.3);
+    const col = bright.geometry.attributes.aColor.data as Float32Array;
     for (let i = 0; i < BRIGHT; i++) {
       const c = i === TARGET ? look.weft[2] : i >= ORIGIN ? look.warp : look.flockA;
-      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+      col[i * 3] = c[0]; col[i * 3 + 1] = c[1]; col[i * 3 + 2] = c[2];
       if (i < SEED_MAX && i === peerSlot) { col[i * 3] = 1; col[i * 3 + 1] = 0.9; col[i * 3 + 2] = 0.7; }
     }
-    bright.geometry.getAttribute("aColor").needsUpdate = true;
+    bright.geometry.attributes.aColor.needsUpdate = true;
   }
 
   function ensureLoom(n: number): void {
     if (total === n) return;
     total = Math.max(1, n);
-    rowsTex.dispose();
-    rowsTex = makeRowsTexture(total);
-    const u = (loom.material as ShaderMaterial).uniforms;
+    gl.deleteTexture(rowsTex.texture);
+    rowsTex = makeRowsTexture(gl, total);
+    const u = loom.program.uniforms;
     u.uRows.value = rowsTex;
-    u.uRowsH.value = rowsTex.image.height;
+    u.uRowsH.value = rowsTex.height;
     u.uTotal.value = total;
     woven = Math.min(woven, total);
     if (loomAt === Infinity) loomAt = stamp();
   }
 
   function landRow(row: number, sideOf: number, b: number, instant: boolean): void {
-    const d = rowsTex.image.data as Float32Array;
+    const d = rowsTex.image as Float32Array;
     d[row * 4] = instant ? -1e3 : clock;
     d[row * 4 + 1] = b;
     d[row * 4 + 2] = sideOf;
@@ -298,7 +298,7 @@ export default function create(): Skin {
     }
   }
 
-  function bezier(a: Vector3, c: Vector3, b: Vector3, u: number, out: Vector3): Vector3 {
+  function bezier(a: V3, c: V3, b: V3, u: number, out: V3): V3 {
     const q = 1 - u;
     return out.set(
       q * q * a.x + 2 * q * u * c.x + u * u * b.x,
@@ -308,7 +308,7 @@ export default function create(): Skin {
   }
 
   /** Where each escort squad is now, and how far its birds have left the main flock (weight 0..1). */
-  const sa0 = new Vector3(), sa1 = new Vector3(), sa2 = new Vector3(), sOut = new Vector3();
+  const sa0 = new V3(), sa1 = new V3(), sa2 = new V3(), sOut = new V3();
   function updateSquads(): void {
     for (let s = 0; s < SQUADS; s++) {
       let w = 0;
@@ -479,7 +479,7 @@ export default function create(): Skin {
 
     // History: one sample every HIST_STEP_MS.
     histAcc += dt * 1000;
-    const d = hist.image.data as Float32Array;
+    const d = hist.image as Float32Array;
     let pushes = snapping ? HIST : 0;
     while (histAcc >= HIST_STEP_MS && pushes < 8) { histAcc -= HIST_STEP_MS; pushes++; }
     if (histAcc > HIST_STEP_MS) histAcc = 0;
@@ -498,7 +498,7 @@ export default function create(): Skin {
     }
     if (pushes) hist.needsUpdate = true;
 
-    const u = (flock.material as ShaderMaterial).uniforms;
+    const u = flock.program.uniforms;
     u.uTime.value += dt * speed * (ctx.reducedMotion ? 0.25 : 1);
     u.uAlpha.value = alpha * Math.sqrt(3500 / flockCount) * 0.2;
     u.uScatter.value = Math.max(scatter, scatterPulse * 0.35);
@@ -516,9 +516,9 @@ export default function create(): Skin {
         setLocal(SEEDS + i, seedAng[i], RING_R, 0.15);
       }
     }
-    const pa = bright.geometry.getAttribute("position").array as Float32Array;
-    const ba = bright.geometry.getAttribute("aBright").array as Float32Array;
-    const sa = bright.geometry.getAttribute("aSize").array as Float32Array;
+    const pa = bright.geometry.attributes.position.data as Float32Array;
+    const ba = bright.geometry.attributes.aBright.data as Float32Array;
+    const sa = bright.geometry.attributes.aSize.data as Float32Array;
     const pulseDecay = Math.exp(-dt * (ctx.reducedMotion ? 1.2 : 2.6));
     for (let i = 0; i < BRIGHT; i++) {
       if (snapping) { bCur[i] = bBase[i]; bPulse[i] = 0; }
@@ -529,15 +529,15 @@ export default function create(): Skin {
       sa[i] = bSize[i] * (1 + bPulse[i] * 0.8);
       pa[i * 3] = bLocal[i * 3]; pa[i * 3 + 1] = bLocal[i * 3 + 1]; pa[i * 3 + 2] = bLocal[i * 3 + 2];
     }
-    bright.geometry.getAttribute("position").needsUpdate = true;
-    bright.geometry.getAttribute("aBright").needsUpdate = true;
-    bright.geometry.getAttribute("aSize").needsUpdate = true;
+    bright.geometry.attributes.position.needsUpdate = true;
+    bright.geometry.attributes.aBright.needsUpdate = true;
+    bright.geometry.attributes.aSize.needsUpdate = true;
   }
 
   function updateThreads(): void {
-    const pa = threads.geometry.getAttribute("position").array as Float32Array;
-    const aa = threads.geometry.getAttribute("aA").array as Float32Array;
-    const za = threads.geometry.getAttribute("aSize").array as Float32Array;
+    const pa = threads.geometry.attributes.position.data as Float32Array;
+    const aa = threads.geometry.attributes.aA.data as Float32Array;
+    const za = threads.geometry.attributes.aSize.data as Float32Array;
     const ending = ended();
     for (let i = 0; i < THREADS; i++) {
       const base = i * THREAD_PTS;
@@ -578,9 +578,9 @@ export default function create(): Skin {
         za[k] = 1.1 + 2.6 * tail * tail;
       }
     }
-    threads.geometry.getAttribute("position").needsUpdate = true;
-    threads.geometry.getAttribute("aA").needsUpdate = true;
-    threads.geometry.getAttribute("aSize").needsUpdate = true;
+    threads.geometry.attributes.position.needsUpdate = true;
+    threads.geometry.attributes.aA.needsUpdate = true;
+    threads.geometry.attributes.aSize.needsUpdate = true;
   }
 
   function placeCamera(): void {
@@ -609,11 +609,11 @@ export default function create(): Skin {
         let fits = true;
         for (let i = 0; i < 48 && fits; i++) {
           const a = (i / 48) * Math.PI * 2;
-          tmp.set(Math.cos(a) * RING_R * 1.06, 0, Math.sin(a) * RING_R * 1.06).project(camera);
-          fits = Math.abs(tmp.x) < xMax && Math.abs(tmp.y) < 0.9;
+          camera.project(proj.set(Math.cos(a) * RING_R * 1.06, 0, Math.sin(a) * RING_R * 1.06));
+          fits = Math.abs(proj.x) < xMax && Math.abs(proj.y) < 0.9;
         }
-        if (fits) tmp.set(LOOM_W / 2, LOOM_Y + LOOM_H + (ctx.size === "card" ? 0.5 : 1.2), 0).project(camera);
-        if (fits && tmp.y < 0.9) {
+        if (fits) camera.project(proj.set(LOOM_W / 2, LOOM_Y + LOOM_H + (ctx.size === "card" ? 0.5 : 1.2), 0));
+        if (fits && proj.y < 0.9) {
           bestD = camDist;
           bestY = ly;
           break;
@@ -630,27 +630,29 @@ export default function create(): Skin {
     if (!renderer) return;
     const m = 0.45;
     const W = 1200, H = Math.round((W * (LOOM_H + 2 * m)) / (LOOM_W + 2 * m));
-    const rt = new WebGLRenderTarget(W, H);
-    rt.texture.colorSpace = SRGBColorSpace;
+    const rt = new RenderTarget(gl, { width: W, height: H });
     const cy = LOOM_Y + LOOM_H / 2;
-    const cam = new OrthographicCamera(-(LOOM_W / 2 + m), LOOM_W / 2 + m, LOOM_H / 2 + m, -(LOOM_H / 2 + m), 0.1, 50);
+    const cam = new Camera(gl, { left: -(LOOM_W / 2 + m), right: LOOM_W / 2 + m, top: LOOM_H / 2 + m, bottom: -(LOOM_H / 2 + m), near: 0.1, far: 50 });
     cam.position.set(0, cy, 10);
-    cam.lookAt(0, cy, 0);
-    const still = new Scene();
-    still.background = new Color(ctx.theme === "dark" ? "#0d1229" : "#1c2b52");
-    const u = (loom.material as ShaderMaterial).uniforms;
-    const keep = [u.uFlare.value, u.uScan.value, u.uShimmer.value, u.uGlow.value];
+    cam.lookAt(new Vec3(0, cy, 0));
+    const still = new Transform();
+    const u = loom.program.uniforms;
+    const keep = [u.uFlare.value, u.uScan.value, u.uShimmer.value, u.uGlow.value, u.uHashMix.value, u.uTime.value];
     u.uFlare.value = u.uScan.value = u.uShimmer.value = 0;
+    u.uHashMix.value = 1; // the settled portrait
+    u.uTime.value = clock + 1e3; // every row fully revealed
     u.uGlow.value = 1.6; // stands in for the bloom the live view adds
-    still.add(loom);
-    renderer.setRenderTarget(rt);
-    renderer.render(still, cam);
+    u.uSRGB.value = 1; // an 8-bit target: encode to sRGB in the shader
+    loom.setParent(still);
+    const bg = ctx.theme === "dark" ? [13, 18, 41] : [28, 43, 82]; // #0d1229 / #1c2b52, already sRGB
+    gl.clearColor(bg[0] / 255, bg[1] / 255, bg[2] / 255, 1);
+    renderer.render({ scene: still, camera: cam, target: rt, frustumCull: false });
     const buf = new Uint8Array(W * H * 4);
-    renderer.readRenderTargetPixels(rt, 0, 0, W, H, buf);
-    renderer.setRenderTarget(null);
-    scene.add(loom);
-    [u.uFlare.value, u.uScan.value, u.uShimmer.value, u.uGlow.value] = keep;
-    rt.dispose();
+    gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, buf);
+    loom.setParent(scene);
+    [u.uFlare.value, u.uScan.value, u.uShimmer.value, u.uGlow.value, u.uHashMix.value, u.uTime.value] = keep;
+    u.uSRGB.value = 0;
+    disposeTarget(gl, rt);
 
     const canvas = document.createElement("canvas");
     canvas.width = W;
@@ -688,7 +690,10 @@ export default function create(): Skin {
         if (verifiedAt < Infinity) setMode("done");
         else setMode(landed >= total && total > 0 ? "checking" : "download");
         break;
-      case "done": setMode("done"); break;
+      case "done":
+        if (verifiedAt < Infinity) setMode("done");
+        else setMode(landed >= total && total > 0 ? "checking" : "download");
+        break;
       case "failed": setMode("failed"); break;
       case "cancelled": setMode("cancelled"); break;
     }
@@ -702,7 +707,7 @@ export default function create(): Skin {
     title: "Murmuration",
     theme: "artistic",
     wantsEnriched: false,
-    libs: ["three.js r186 (WebGL2)", "UnrealBloomPass"],
+    libs: ["OGL 1.0.11 (WebGL2)", "hand-written bloom"],
     illustrativeNote: "the flock's path and the star positions",
     tweakables,
 
@@ -718,30 +723,31 @@ export default function create(): Skin {
         c.container.appendChild(fallback);
         return;
       }
-      c.container.appendChild(renderer.domElement);
-      renderer.setClearColor(0x000000, 1);
+      gl = renderer.gl;
+      c.container.appendChild(gl.canvas);
+      camera = new Camera(gl, { fov: 36, aspect: 1.6, near: 0.5, far: 200 });
       // A night sky in both themes (additive light needs a dark ground); the light theme gets a dusk blue.
-      scene.add(c.theme === "dark" ? makeSky("#04060e", "#0d1229") : makeSky("#1c2b52", "#3b5288"));
+      sky = c.theme === "dark" ? makeSky(gl, hex("#04060e"), hex("#0d1229")) : makeSky(gl, hex("#1c2b52"), hex("#3b5288"));
+      sky.setParent(scene);
 
       const rand = prng(c.seed, 1);
       seedWord = (c.seed[0] | (c.seed[1] << 8) | (c.seed[2] << 16) | (c.seed[3] << 24)) >>> 0;
       side = c.seed[10] & 1 ? 1 : -1;
       ringRot = rand() * Math.PI * 2;
 
-      ring = makeRing(c.size === "full" ? 1400 : 900, rand);
-      bright = makeBright();
-      ringGroup.add(ring, bright);
-      scene.add(ringGroup);
+      ring = makeRing(gl, c.size === "full" ? 1400 : 900, rand);
+      bright = makeBright(gl);
+      ring.setParent(ringGroup);
+      bright.setParent(ringGroup);
+      ringGroup.setParent(scene);
 
-      hist = makeHistory();
-      rowsTex = makeRowsTexture(1);
-      portraitTex = makePortraitTexture(new Uint8Array(8 * 16));
-      loom = makeLoom(rowsTex, portraitTex);
-      loom.renderOrder = 1;
-      scene.add(loom);
-      threads = makeThreads();
-      threads.renderOrder = 4;
-      scene.add(threads);
+      hist = makeHistory(gl);
+      rowsTex = makeRowsTexture(gl, 1);
+      portraitTex = dataTexture(gl, new Uint8Array(8 * 16), 8, 16, false);
+      loom = makeLoom(gl, rowsTex, portraitTex);
+      loom.setParent(scene);
+      threads = makeThreads(gl);
+      threads.setParent(scene);
 
       // Seeded star slots: 16 seed positions, the file's point and its neighbours.
       for (let i = 0; i < SEED_MAX; i++) {
@@ -759,11 +765,8 @@ export default function create(): Skin {
       buildFlock();
       applyLook();
 
-      composer = new EffectComposer(renderer);
-      composer.addPass(new RenderPass(scene, camera));
-      bloom = new UnrealBloomPass(new Vector2(256, 256), Number(params.bloom), 0.5, 0.3);
-      composer.addPass(bloom);
-      composer.addPass(new OutputPass());
+      bloom = new Bloom(gl);
+      bloom.strength = Number(params.bloom);
       pos.set(side * RING_R * 2.4, 3, 6);
 
       if (c.size === "full") {
@@ -859,9 +862,10 @@ export default function create(): Skin {
             for (let r = woven; r < total; r++) landRow(r, r & 1, 0.8, snapping);
             woven = total;
           }
-          verifiedAt = stamp();
+          hashReady = true;
+          if (snapping) verifiedAt = -1e3;
           const hb = seedFromAddress(e.hash);
-          (portraitTex.image.data as Uint8Array).set(portraitCells(hb));
+          (portraitTex.image as Uint8Array).set(portraitCells(hb));
           portraitTex.needsUpdate = true;
           break;
         }
@@ -877,6 +881,7 @@ export default function create(): Skin {
       if (!renderer || !w) return;
       const dt = Math.min(dtMs, 100) / 1000;
       clock += dt;
+      if (hashReady && verifiedAt === Infinity && landed >= total) verifiedAt = clock;
       deriveMode();
       if (!ctx.reducedMotion) ringRot += dt * 0.012;
       ringGroup.rotation.y = ringRot;
@@ -894,7 +899,7 @@ export default function create(): Skin {
       updateStars(dt);
       updateThreads();
 
-      const lu = (loom.material as ShaderMaterial).uniforms;
+      const lu = loom.program.uniforms;
       lu.uTime.value = clock;
       lu.uAppear.value = ease((clock - loomAt) / 1.6);
       lu.uShimmer.value = shimmer;
@@ -907,18 +912,18 @@ export default function create(): Skin {
       lu.uDim.value = dim;
       lu.uWarpFade.value = warpFade;
       lu.uReveal.value = ctx.reducedMotion ? 1.2 : 0.45;
-      (ring.material as ShaderMaterial).uniforms.uTime.value = clock;
-      (ring.material as ShaderMaterial).uniforms.uAlpha.value = ringAlpha;
-      (threads.material as ShaderMaterial).uniforms.uGrey.value = grey;
+      ring.program.uniforms.uTime.value = clock;
+      ring.program.uniforms.uAlpha.value = ringAlpha;
+      threads.program.uniforms.uGrey.value = grey;
 
-      const show = verifiedAt < Infinity && mode === "done";
+      const show = mode === "done" && sinceV > 2; // once the portrait has settled
       if (saveBtn && show !== saveShown) {
         saveShown = show;
         saveBtn.style.display = show ? "block" : "none";
       }
 
       placeCamera();
-      composer.render(dt);
+      bloom.render(renderer, scene, camera);
       snapping = false;
       burst = 0;
     },
@@ -926,15 +931,14 @@ export default function create(): Skin {
     resize(nw, nh, dpr) {
       w = nw;
       if (!renderer) return;
-      renderer.setPixelRatio(dpr);
-      renderer.setSize(nw, nh, false);
-      composer.setPixelRatio(dpr);
-      composer.setSize(nw, nh);
-      camera.aspect = nw / nh;
-      camera.updateProjectionMatrix();
+      renderer.dpr = dpr;
+      renderer.setSize(nw, nh);
+      gl.canvas.style.width = gl.canvas.style.height = "100%";
+      bloom.setSize(Math.round(nw * dpr), Math.round(nh * dpr));
+      camera.perspective({ aspect: nw / nh });
       fitCamera();
       px = dpr * Math.min(1.6, Math.max(0.6, nh / 420));
-      for (const m of [ring, bright, flock, threads]) (m.material as ShaderMaterial).uniforms.uPx.value = px;
+      for (const m of [ring, bright, flock, threads]) m.program.uniforms.uPx.value = px;
     },
 
     setParams(p) {
@@ -953,16 +957,9 @@ export default function create(): Skin {
       if (fallback) fallback.remove();
       saveBtn?.remove();
       if (!renderer) return;
-      scene.traverse((o) => {
-        const m = o as Partial<Mesh>;
-        m.geometry?.dispose();
-        (m.material as ShaderMaterial | undefined)?.dispose();
-      });
-      hist.dispose();
-      rowsTex.dispose();
-      portraitTex.dispose();
+      for (const m of [sky, ring, bright, flock, threads, loom]) freeMesh(m);
+      for (const t of [hist, rowsTex, portraitTex]) gl.deleteTexture(t.texture);
       bloom.dispose();
-      composer.dispose();
       renderer = null;
       releaseRenderer();
     },

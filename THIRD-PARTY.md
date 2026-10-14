@@ -8,14 +8,13 @@ Everything here allows commercial use. Add a row whenever a skin adds a library,
 | --- | --- | --- | --- |
 | @withautonomi/ant-browser-sdk | 0.1.2 | MIT OR Apache-2.0 | Live downloads (lazy-loaded) |
 | tweakpane | 4.0.5 | MIT | Tweak panel, synthetic-source sliders |
-| three | 0.186.1 | MIT | Murmuration: WebGL rendering and bloom (`UnrealBloomPass`); lazy-loaded with the skin |
+| ogl | 1.0.11 | Unlicense | Murmuration: WebGL2 rendering; lazy-loaded with the skin |
 
 ## Development only
 
 | Package | Version | Licence | Used for |
 | --- | --- | --- | --- |
 | @tweakpane/core | 2.0.5 | MIT | Tweakpane type definitions |
-| @types/three | 0.186.0 | MIT | three.js type definitions |
 | vite | 8.3.1 | MIT | Dev server and build |
 | typescript | 7.0.2 | Apache-2.0 | Type checking |
 | vitest | 5.0.2 | MIT | Unit tests |
@@ -24,4 +23,4 @@ Everything here allows commercial use. Add a row whenever a skin adds a library,
 
 ## Fonts, sounds, images, adapted code
 
-None yet. The gallery uses system fonts.
+- Murmuration's bloom (`src/skins/murmuration/bloom.ts`) re-implements the algorithm of three.js's `UnrealBloomPass` and `OutputPass` (r186, MIT, © three.js authors): the same mip chain, kernels and composite, written for OGL. The gallery otherwise uses system fonts.

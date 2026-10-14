@@ -4,11 +4,11 @@
     "speed": 1,
     "durationS": 301.6,
     "clipS": 301.6,
-    "frames": 54312,
+    "frames": 54289,
     "fpsMedian": 178.57142857217102,
-    "fpsP5": 178.5714285703149,
-    "skinMsMean": 0.37077993848552443,
-    "skinMsP95": 0.5,
+    "fpsP5": 175.43859649176554,
+    "skinMsMean": 0.2855182449439404,
+    "skinMsP95": 0.40000009536743164,
     "halfRate": false
   }
 ]
