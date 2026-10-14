@@ -2,6 +2,11 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-14 · Step 1 follow-up (David)
+
+- **Squad size stays at 1/12** of the flock, and **the wait stays**: a thread launches only when its squad reaches the star.
+- **Illustrative note moved off the visualisation (all skins).** It covered part of the view, so it now sits below the stage, under the progress text, in small muted type. It is still shown by default, and the gallery toggle still hides it. Review captures (stage only) no longer include it.
+
 ## 2026-10-14 · Step 1 review outcome (David)
 
 - **Escort squads (new):** after the file is found, part of the flock flies out to each thread's star, rides in with the thread, then rejoins the main flock. Each of 8 squads owns 1/12 of the birds. A thread launches when its squad arrives, so each row lands about 0.7-1.6 s after its real `chunk.done`. Counts and totals stay real; the extra delay is purely visual. With no free squad (fast downloads, seeks, reduced motion), threads fly on their own as before. There is a tweak-panel switch for this.

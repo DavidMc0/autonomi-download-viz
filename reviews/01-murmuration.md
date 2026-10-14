@@ -96,3 +96,8 @@ The three final frames show three different palettes and three different hash po
 **Open questions**
 1. **Squad size.** Each squad is 1/12 of the flock now. **A:** keep it. **B:** bigger (1/8), more dramatic, but the main flock thins out when several squads are out. **C:** smaller (1/16), subtler. *I suggest A.*
 2. **Row delay.** Rows land 0.7-1.6 s after the real chunk. **A:** keep it, since the escort is the point. **B:** start the thread at once and let the squad chase it from the flock (no delay, but the squad never reaches the star first). *I suggest A:* the delay is short and steady, and the progress text stays exact.
+
+### Resolved (2026-10-14)
+
+- Squads stay at 1/12 of the flock, and the thread waits for its squad.
+- The illustrative note is no longer drawn over the visualisation, for all skins. It now sits below the stage, under the progress text, as "Illustrative: the flock's path and the star positions". The captures were re-recorded without it.

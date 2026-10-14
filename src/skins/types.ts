@@ -46,7 +46,7 @@ export interface Skin {
   wantsEnriched: boolean;
   /** Shown in the gallery. */
   libs: string[];
-  /** Shown when "illustrative note" is on, e.g. "node positions are illustrative". Omit if nothing is. */
+  /** Shown below the stage after "Illustrative:" when the note is on, e.g. "node positions". Omit if nothing is. */
   illustrativeNote?: string;
   mount(ctx: SkinContext): void | Promise<void>;
   /** Cheap: update state only, never draw here. */

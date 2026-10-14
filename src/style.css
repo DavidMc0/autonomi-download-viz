@@ -89,10 +89,8 @@ a { color: var(--accent); }
 .stage-wrap.full { width: 100%; height: min(70vh, 720px); min-height: 360px; }
 .stage-wrap:fullscreen { width: 100vw; height: 100vh; border-radius: 0; }
 .stage { position: absolute; inset: 0; }
-.illustrative {
-  position: absolute; left: 8px; bottom: 8px; font-size: 11px; padding: 2px 8px; border-radius: 10px;
-  background: #0007; color: #fff; pointer-events: none;
-}
+/* Below the stage, so it never covers the visualisation. */
+.illustrative { margin: -6px 0 12px; text-align: center; font-size: 12px; color: var(--muted); }
 .hud {
   position: absolute; right: 6px; top: 6px; margin: 0; font: 10.5px/1.35 ui-monospace, Consolas, monospace;
   background: #000a; color: #b8f5c8; padding: 4px 6px; border-radius: 4px; pointer-events: none; white-space: pre;
@@ -155,4 +153,5 @@ body.capture .layout { display: block; padding: 0; }
 body.capture .stage-row { padding: 0; border: 0; border-radius: 0; background: var(--stage-bg); justify-content: flex-start; }
 body.capture .stage-wrap { border-radius: 0; box-shadow: none; }
 body.capture .stage-wrap.full { width: 960px; height: 540px; }
+body.capture .illustrative { margin: 0; padding: 0 0 6px 12px; text-align: left; font-size: 11px; }
 body.capture .progress-text { margin: 0; padding: 6px 0; font-size: 13px; text-align: left; padding-left: 12px; }

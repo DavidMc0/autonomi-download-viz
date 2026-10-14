@@ -703,7 +703,7 @@ export default function create(): Skin {
     theme: "artistic",
     wantsEnriched: false,
     libs: ["three.js r186 (WebGL2)", "UnrealBloomPass"],
-    illustrativeNote: "the flock's path and the star positions are illustrative",
+    illustrativeNote: "the flock's path and the star positions",
     tweakables,
 
     mount(c) {
