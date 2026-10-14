@@ -2,7 +2,7 @@
 
 A gallery of animated "skins" for an Autonomi download. All skins are driven by one event stream, which comes from a real download, a recorded trace or a synthetic one. The winning skins will later be added to the [Download Button](https://github.com/DavidMc0/autonomirror) page.
 
-The plan and its current state are in [DECISIONS.md](DECISIONS.md). Review notes for each step are in [reviews/](reviews/).
+The original build brief is in [BRIEF.md](BRIEF.md). The current plan and its state are in [DECISIONS.md](DECISIONS.md), which wins where the two differ. Review notes for each step are in [reviews/](reviews/).
 
 ## Run it
 

@@ -2,6 +2,10 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-14 · Build brief added (David)
+
+- **The build brief is now in the repo as `BRIEF.md`.** David checked it for private content and added a credit to riddim for the Robot DJ concept. This file still overrides the brief where they differ.
+
 ## 2026-10-14 · Step 2, Robot DJ (build choices, awaiting review)
 
 - **Canvas 2D and Web Audio, not PixiJS and Tone.js.** After the OGL port, bundle size matters: the skin adds 9.9 kB gzipped with no libraries (PixiJS and Tone.js would add roughly 200 kB). Asked as review question 1.
