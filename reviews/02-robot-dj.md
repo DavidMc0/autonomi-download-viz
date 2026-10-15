@@ -67,3 +67,44 @@ The smoke test passes for all 9 traces on all three skins (56 checks), and a run
 - The hash is shown as `✓ <8 hex>` on the tower in full size only (it's too small to read in card mode).
 - There is no Rive version. The robot is a standalone module driven by one `RobotPose`, so a designer could replace it with a Rive state machine later. *A designer pass would help this skin most*, especially the face and hands.
 - The FPS figures aren't from a mid-range laptop or phone. Please check the HUD on yours.
+
+## Follow-up (2026-10-15): David's answers applied
+
+**What changed**
+- **Elbows fixed.** The arms are now solved in 3D: the decks sit in front of the robot, so the arms reach toward the viewer and foreshorten. The elbows always bend down and outward. Before, the 2D solver picked "the lower elbow", which pointed inward into the body and could flip as the robot bobbed. Every pose was re-checked (decks, crate, watch, scanner, drop, shrug, wave), and hands nearer the viewer now draw slightly larger.
+- **Robot styles.** A new "robot style" tweak switches between **cute** (the default, unchanged), **retro** (a TV-set head with rabbit-ear antennae, scanlines and knobs, a riveted cabinet body with a VU meter and dials, ribbed hose arms, square hands, cream and rust) and **sleek** (a glossy egg head with a thin visor band and a light fin, a tapered shell with a vertical light strip, slim limbs, and a mouth only for big feelings). "robot colours" now defaults to **match style**: cute stays seeded by address, and retro and sleek use their own palettes. Any palette can still be picked with any style. Side by side: `robot-dj-styles.png`.
+- **Disks:** grouping stays, and the group size grows with the file (at most 60 disks), as agreed.
+- **The finding stage** stays as crate-digging, with no duds.
+- **The music now builds with the download.** At each bar line, the track adds one layer for every tenth of the chunks that are in:
+
+  | Chunks in | Layer that joins |
+  | --- | --- |
+  | 0-10% | pad chords (the filter opens as chunks arrive) |
+  | 10% | kick |
+  | 20% | snare on 2 and 4 |
+  | 30% | off-beat hat |
+  | 40% | bass |
+  | 50% | arpeggio |
+  | 60% | 16th hats and an open hat |
+  | 70% | lead motif |
+  | 80% | chord stabs |
+  | 90% | a snare roll that tightens toward 100% |
+
+  - **Checking** (the ~10 s whole-file verification) is a **breakdown**: the drums drop out, the pad and arpeggio carry on, and a noise riser and an accelerating snare roll build tension.
+  - **The drop** brings every layer back at once with a boom and a crash, for 8 bars. Then the layers leave one by one over 4 bars, and the track ends on the home chord. The robot keeps dancing after that.
+  - **Stalls** still cut the music with a scratch. It resumes from the top of a bar.
+  - **Seeded by address:** the key (E to B), one of four minor-key chord progressions, and a 2-bar lead motif, so each file has its own tune. I kept this light so that Step 7 (The file's song) still has its own territory.
+  - The tempo still follows the rate (92-128 bpm), and the sound plays only when sound is on.
+- **The mixer on the DJ table** now shows one light per playing layer, so the build can be seen with the sound off too.
+- **The robot dances to what you hear:** with sound on, the bob, the chest lights and the crowd follow the audio clock rather than a separate timer.
+- **Tweaks:** "music builds with download" can be turned off to play the full mix from the first chunk.
+- **Tooling:** `scripts/shots.ts` takes stills at a chosen point in a trace with tweak values (`node scripts/shots.ts robot-dj --at 0.5 --params '{"style":"retro"}'`).
+
+**Checks:** a headless run with sound on (`medium-64mb` at 3×) added layers 1 → 10 as the chunks arrived, ran the drop and the outro (6 → 3 → 2 → 1 → silence), and raised no console errors. The smoke test passes 56/56. The skin is now **13.4 kB** gzipped (it was 9.9 kB) and takes **0.32-0.46 ms** per frame (p95 0.70) in the new captures, which replace the old ones.
+
+**Still unheard by me:** the mix balance and the sound of each layer. Try `/#robot-dj?trace=medium-64mb&size=full` with **Sound** on. That run takes about 5 minutes at 1×, so each layer lasts about 30 s. `?trace=large&speed=4` gives a faster build.
+
+**Open questions**
+1. **Build pace.** One layer every 10% is linear. **A:** keep it. **B:** front-load it (kick by 5%, snare by 10% and so on), so short files reach the groove sooner. *I suggest A*, unless the first 10% feels too long on big files.
+2. **After the outro.** The track ends about 22 s after the drop, but the robot keeps dancing silently. **A:** keep that. **B:** the robot winds down (takes off its headphones and waves) when the music ends. *I suggest B*, as a cleaner ending.
+3. **Style.** After seeing them, keep **cute** as the default with the toggle? Or should one of the others replace it?

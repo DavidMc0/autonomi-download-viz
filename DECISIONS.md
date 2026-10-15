@@ -2,6 +2,16 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-15 · Step 2 review outcome (David)
+
+- **Libraries:** Canvas 2D and Web Audio, not PixiJS or Tone.js.
+- **Robot:** cute stays the default. Retro and sleek styles were added as a "robot style" tweak so they can be compared. "robot colours" defaults to "match style".
+- **Disks:** chunks are grouped, and the group size grows with the file (at most 60 disks).
+- **Finding stage:** crate-digging only, no duds.
+- **Elbows fixed:** the arms are solved in 3D, with the elbows bending down and outward (they used to point inward and flip during the bob).
+- **Music builds with the download (David's idea):** one layer joins per tenth of the chunks, at bar lines. The order is pad, kick, snare, hat, bass, arpeggio, 16th hats, lead, stabs, then a roll. Checking is a breakdown with a riser. The drop plays the full mix for 8 bars, then a 4-bar outro and the end. The key, progression and motif are seeded by address, kept light to leave Step 7 room. The music stays on by default when sound is enabled.
+- **The Autonomi SDK issue draft is parked** (David: "work with what we have").
+
 ## 2026-10-14 · Build brief added (David)
 
 - **The build brief is now in the repo as `BRIEF.md`.** David checked it for private content and added a credit to riddim for the Robot DJ concept. This file still overrides the brief where they differ.

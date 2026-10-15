@@ -10,11 +10,12 @@
 import { describeState, initialState, reduce } from "../../events/state";
 import type { VizEvent } from "../../events/types";
 import { defaultParams, type Skin, type SkinContext, type TweakDef } from "../types";
-import { Beat } from "./audio";
-import { drawArms, drawBody, newRig, rig, SCHEMES, seededScheme, type Expression, type RobotPalette, type RobotPose } from "./characters/robot";
+import { Beat, layersFor, type Section } from "./audio";
+import { drawArms, drawBody, newRig, rig, SCHEMES, seededScheme, type Expression, type RobotPalette, type RobotPose, type RobotStyle } from "./characters/robot";
 
 const tweakables: TweakDef[] = [
-  { key: "scheme", label: "robot colours", kind: "select", options: { "seeded by address": "seeded", retro: "retro", sleek: "sleek", chrome: "chrome" }, default: "seeded" },
+  { key: "style", label: "robot style", kind: "select", options: { cute: "cute", retro: "retro", sleek: "sleek" }, default: "cute" },
+  { key: "scheme", label: "robot colours", kind: "select", options: { "match style": "match", "seeded by address": "seeded", retro: "retro", sleek: "sleek", chrome: "chrome" }, default: "match" },
   { key: "tower", label: "tower style", kind: "select", options: { "stacked disks": "disks", vinyl: "vinyl" }, default: "disks" },
   { key: "group", label: "chunks per disk", kind: "select", options: { "auto (at most 60 disks)": "auto", "always 1": "1" }, default: "auto" },
   { key: "crowd", label: "crowd size", kind: "number", min: 0, max: 30, step: 1, default: 14 },
@@ -22,6 +23,7 @@ const tweakables: TweakDef[] = [
   { key: "tempoMin", label: "tempo min (bpm)", kind: "number", min: 60, max: 110, step: 1, default: 92 },
   { key: "tempoMax", label: "tempo max (bpm)", kind: "number", min: 100, max: 160, step: 1, default: 128 },
   { key: "music", label: "music (with sound on)", kind: "boolean", default: true },
+  { key: "build", label: "music builds with download", kind: "boolean", default: true },
 ];
 
 // World layout (logical units; the view scales to fit).
@@ -62,6 +64,7 @@ export default function create(): Skin {
   let g!: CanvasRenderingContext2D;
   let w = 0, h = 0, dpr = 1;
   let pal!: RobotPalette;
+  let style: RobotStyle = "cute";
   let beat: Beat | null = null;
 
   let clock = 0;
@@ -99,11 +102,12 @@ export default function create(): Skin {
   // Robot.
   const pose: RobotPose = {
     x: ROBOT_X, y: FLOOR, bob: 0, lean: 0, headTilt: 0, shrug: 0,
-    handL: { x: DECK_L.x, y: DECK_L.y - 8 }, handR: { x: DECK_R.x, y: DECK_R.y - 8 },
+    handL: { x: DECK_L.x, y: DECK_L.y - 8, z: 80 }, handR: { x: DECK_R.x, y: DECK_R.y - 8, z: 80 },
     footTap: 0, expression: "off", visor: 0, blink: 0, antenna: 0, chest: 0,
   };
   const r = newRig();
-  const goalL = { x: DECK_L.x, y: DECK_L.y - 8 }, goalR = { x: DECK_R.x, y: DECK_R.y - 8 };
+  // Hand goals; z is depth toward the viewer (the decks are in front of the robot).
+  const goalL = { x: DECK_L.x, y: DECK_L.y - 8, z: 80 }, goalR = { x: DECK_R.x, y: DECK_R.y - 8, z: 80 };
   let leanGoal = 0, shrugGoal = 0, tiltGoal = 0;
 
   // Particles.
@@ -236,8 +240,8 @@ export default function create(): Skin {
     leanGoal = 0; shrugGoal = 0; tiltGoal = 0;
     let tap = 0;
     // Default: hands on the decks.
-    goalL.x = DECK_L.x + 6; goalL.y = DECK_L.y - 10;
-    goalR.x = DECK_R.x - 6; goalR.y = DECK_R.y - 10;
+    goalL.x = DECK_L.x + 6; goalL.y = DECK_L.y - 10; goalL.z = 80;
+    goalR.x = DECK_R.x - 6; goalR.y = DECK_R.y - 10; goalR.z = 80;
     pose.visor = approach(pose.visor, 1, 3, dt);
 
     switch (mode) {
@@ -250,13 +254,14 @@ export default function create(): Skin {
         pose.visor = t < 1.2 ? (Math.sin(t * 37) > 0.2 ? 0.8 : 0.15) : 1;
         expr = t < 1.2 ? "neutral" : "boot";
         goalL.x = ROBOT_X - 40; goalL.y = 380; goalR.x = ROBOT_X + 40; goalR.y = 380;
+        goalL.z = goalR.z = 20;
         break;
       }
       case "plug": {
         // Reaching out to plug cables into the seed speakers (time-driven, one by one).
         expr = peerAt < Infinity && clock - peerAt < 1.2 ? "happy" : "focus";
         const k = Math.sin(el * 5) * 0.5 + 0.5;
-        goalL.x = TABLE.x0 - 10 - k * 20; goalL.y = 330 + k * 18;
+        goalL.x = TABLE.x0 - 10 - k * 20; goalL.y = 330 + k * 18; goalL.z = 10;
         tiltGoal = -0.12;
         break;
       }
@@ -267,13 +272,14 @@ export default function create(): Skin {
         const up = cyc > 0.7 && cyc < 1.3 ? ease((cyc - 0.7) / 0.2) * (1 - ease((cyc - 1.1) / 0.2)) : 0;
         goalR.x = CRATE.x + 26 + Math.sin(el * 3) * 10;
         goalR.y = CRATE.y + 4 - up * 46;
+        goalR.z = 20;
         tiltGoal = 0.18;
         leanGoal = 0.05;
         break;
       }
       case "setlist":
         expr = clock - mapAt < 0.8 ? "wow" : "happy";
-        goalL.x = ROBOT_X - 70; goalL.y = 268;
+        goalL.x = ROBOT_X - 70; goalL.y = 268; goalL.z = 30;
         tiltGoal = -0.08;
         break;
       case "play": {
@@ -291,7 +297,7 @@ export default function create(): Skin {
           goalR.x = DECK_R.x + Math.sin(t * 40) * 14;
         } else {
           expr = "bored";
-          goalL.x = ROBOT_X - 30; goalL.y = FLOOR - 196; // wrist up to the visor
+          goalL.x = ROBOT_X - 30; goalL.y = FLOOR - 196; goalL.z = 45; // wrist up to the visor
           tiltGoal = -0.15;
           tap = Math.max(0, Math.sin(clock * 12));
         }
@@ -299,7 +305,7 @@ export default function create(): Skin {
       }
       case "check": {
         expr = "focus";
-        goalR.x = ROBOT_X + 96; goalR.y = 300; // the scanner, pointing at the tower
+        goalR.x = ROBOT_X + 96; goalR.y = 300; goalR.z = 20; // the scanner, pointing at the tower
         tiltGoal = 0.12;
         break;
       }
@@ -312,6 +318,7 @@ export default function create(): Skin {
         } else if (t < 3) {
           goalL.x = ROBOT_X - 70; goalL.y = FLOOR - 270 + b * 10;
           goalR.x = ROBOT_X + 70; goalR.y = FLOOR - 270 + b * 10;
+          goalL.z = goalR.z = 0;
         } else {
           goalL.y -= b * 12;
           goalR.y -= (1 - b) * 12;
@@ -323,6 +330,7 @@ export default function create(): Skin {
         shrugGoal = el < 0.6 ? 0 : 1;
         goalL.x = ROBOT_X - 92; goalL.y = FLOOR - 150;
         goalR.x = ROBOT_X + 92; goalR.y = FLOOR - 150;
+        goalL.z = goalR.z = 0;
         break;
       case "cancelled": {
         expr = el < 2.4 ? "neutral" : "wink";
@@ -331,8 +339,8 @@ export default function create(): Skin {
           const k = (el * 1.5) % 1;
           goalL.x = DECK_L.x + k * 40; goalR.x = DECK_R.x - k * 40;
         } else {
-          goalR.x = ROBOT_X + 70; goalR.y = FLOOR - 250 + Math.sin(clock * 9) * 12; // a wave
-          goalL.x = ROBOT_X - 40; goalL.y = 380;
+          goalR.x = ROBOT_X + 70; goalR.y = FLOOR - 250 + Math.sin(clock * 9) * 12; goalR.z = 0; // a wave
+          goalL.x = ROBOT_X - 40; goalL.y = 380; goalL.z = 20;
         }
         break;
       }
@@ -343,6 +351,8 @@ export default function create(): Skin {
     pose.handL.y = approach(pose.handL.y, goalL.y, k, dt);
     pose.handR.x = approach(pose.handR.x, goalR.x, k, dt);
     pose.handR.y = approach(pose.handR.y, goalR.y, k, dt);
+    pose.handL.z = approach(pose.handL.z, goalL.z, k, dt);
+    pose.handR.z = approach(pose.handR.z, goalR.z, k, dt);
     pose.lean = approach(pose.lean, leanGoal, snapping ? 1e3 : 6, dt);
     pose.shrug = approach(pose.shrug, shrugGoal, snapping ? 1e3 : 8, dt);
     pose.headTilt = approach(pose.headTilt, tiltGoal + (bpm > 0 ? Math.sin(phase * Math.PI) * 0.04 : 0), snapping ? 1e3 : 6, dt);
@@ -406,6 +416,36 @@ export default function create(): Skin {
     }
   }
 
+  function progress(): number {
+    return total > 0 ? Math.min(1, completed / total) : 0;
+  }
+
+  function mixerChannels(): number {
+    if (mode === "play") return params.build ? layersFor(progress()) : 9;
+    if (mode === "check") return 3;
+    if (mode === "drop") {
+      // 8 full bars at the top tempo, then the outro takes layers away (as the music does).
+      const bar = ((clock - dropAt) * Number(params.tempoMax)) / 240 - 8;
+      return bar < 0 ? 10 : [6, 3, 2, 1][Math.floor(bar)] ?? 0;
+    }
+    return 0;
+  }
+
+  function section(): Section {
+    return mode === "play" ? "play" : mode === "check" ? "check" : mode === "drop" ? "drop" : "off";
+  }
+
+  function makeBeat(): void {
+    beat?.dispose();
+    beat = ctx.audio && ctx.audioOut && params.music ? new Beat(ctx.audio, ctx.audioOut, ctx.seed) : null;
+  }
+
+  function applyStyle(): void {
+    style = (["cute", "retro", "sleek"].includes(String(params.style)) ? String(params.style) : "cute") as RobotStyle;
+    const scheme = String(params.scheme) === "match" ? (style === "cute" ? "seeded" : style) : String(params.scheme);
+    pal = scheme in SCHEMES ? SCHEMES[scheme] : seededScheme(ctx.seed);
+  }
+
   function drawSpeakers(card: boolean): void {
     const n = Math.min(seeds, SPEAKERS.length);
     for (let i = 0; i < SPEAKERS.length; i++) {
@@ -466,15 +506,19 @@ export default function create(): Skin {
     g.beginPath();
     g.roundRect(TABLE.x0, TABLE.y - 4, TABLE.x1 - TABLE.x0, 18, 4);
     g.fill();
-    // Mixer.
+    // Mixer: one channel light per music layer playing (they join as the file comes in).
     g.fillStyle = C.deck;
     g.beginPath();
-    g.roundRect(ROBOT_X - 22, TABLE.y - 16, 44, 14, 3);
+    g.roundRect(ROBOT_X - 30, TABLE.y - 17, 60, 15, 3);
     g.fill();
-    for (let i = 0; i < 3; i++) {
-      g.fillStyle = bpm > 0 && beatPulse * 3 > i ? pal.glow : C.muted;
-      g.fillRect(ROBOT_X - 14 + i * 11, TABLE.y - 12, 6, 4);
+    const n = mixerChannels();
+    for (let i = 0; i < 10; i++) {
+      const lit = i < n;
+      g.fillStyle = lit ? pal.glow : C.muted;
+      g.globalAlpha = lit ? 0.55 + 0.45 * beatPulse : 0.6;
+      g.fillRect(ROBOT_X - 26 + i * 5.4, TABLE.y - 13 + (lit ? 0 : 3), 3.4, lit ? 8 : 4);
     }
+    g.globalAlpha = 1;
   }
 
   function drawDeck(d: { x: number; y: number }, i: number, lid: number): void {
@@ -824,8 +868,8 @@ export default function create(): Skin {
       C = themeColours(c.theme === "dark");
       seedWord = (c.seed[0] | (c.seed[1] << 8) | (c.seed[2] << 16) | (c.seed[3] << 24)) >>> 0;
       hue0 = Math.round((c.seed[13] / 256) * 360);
-      pal = String(params.scheme) in SCHEMES ? SCHEMES[String(params.scheme)] : seededScheme(c.seed);
-      if (c.audio && c.audioOut && params.music) beat = new Beat(c.audio, c.audioOut);
+      applyStyle();
+      makeBeat();
     },
 
     onEvent(e: VizEvent) {
@@ -911,15 +955,18 @@ export default function create(): Skin {
       if (mode === "drop") target = tmax;
       bpm = target === 0 ? approach(bpm, 0, 6, dt) : approach(bpm || target, target, 1.5, dt);
       if (bpm < 20) bpm = target === 0 ? 0 : bpm;
-      phase += (dt * bpm) / 60;
+      const audible = beat && ctx.audio?.state === "running";
+      if (audible) beat!.tick({ bpm, section: section(), progress: progress(), build: Boolean(params.build) });
+      // Follow the beat the listener hears when there is one; otherwise keep time from the tempo.
+      const heard = audible ? beat!.phase() : null;
+      phase = heard ?? phase + (dt * bpm) / 60;
       beatPulse = bpm > 0 ? Math.exp(-(phase % 1) * 5) : 0;
-      if (beat && ctx.audio?.state === "running") beat.tick(mode === "play" || mode === "check" || mode === "drop" ? bpm : 0);
       deckSpin += dt * (bpm > 0 ? (bpm / 60) * 2.2 : mode === "search" || mode === "setlist" ? 0.6 : 0);
       for (let i = 0; i < landBounce.length; i++) landBounce[i] *= Math.exp(-dt * 9);
       for (let i = 0; i < crowdKick.length; i++) crowdKick[i] *= Math.exp(-dt * 5);
 
       poseFor(dt);
-      rig(pose, r);
+      rig(pose, r, style);
 
       // Draw.
       const card = ctx.size === "card";
@@ -934,12 +981,12 @@ export default function create(): Skin {
       drawBackground(vw, lightsOn * (ctx.reducedMotion ? 0.6 : 1));
       drawSpeakers(card);
       drawCrate();
-      drawBody(g, pose, pal, clock);
+      drawBody(g, pose, pal, clock, style);
       drawTable();
       const lid = mode === "cancelled" ? ease((clock - modeAt - 1.2) / 1) : 0;
       drawDeck(DECK_L, 0, lid);
       drawDeck(DECK_R, 1, lid);
-      drawArms(g, r, pal);
+      drawArms(g, r, pal, style);
       drawProps(card);
       const greyed = mode === "failed" ? ease((clock - endAt) / 1.2) : mode === "cancelled" ? 0.5 * ease((clock - endAt) / 1.5) : 0;
       drawTower(card, greyed);
@@ -961,7 +1008,7 @@ export default function create(): Skin {
     setParams(p) {
       const prevGroup = params.group;
       params = { ...params, ...p };
-      pal = String(params.scheme) in SCHEMES ? SCHEMES[String(params.scheme)] : seededScheme(ctx.seed);
+      applyStyle();
       if (params.group !== prevGroup && total) {
         const t = total;
         total = 0;
@@ -973,8 +1020,8 @@ export default function create(): Skin {
         onChunks(completed);
         snapping = save;
       }
-      if (!params.music) beat = null;
-      else if (!beat && ctx.audio && ctx.audioOut) beat = new Beat(ctx.audio, ctx.audioOut);
+      if (!params.music) { beat?.dispose(); beat = null; }
+      else if (!beat) makeBeat();
     },
 
     describe() {
@@ -982,6 +1029,7 @@ export default function create(): Skin {
     },
 
     destroy() {
+      beat?.dispose();
       beat = null;
       canvas?.remove();
     },
@@ -989,7 +1037,7 @@ export default function create(): Skin {
     stats() {
       let conf = 0;
       for (const p of confetti) if (p.life > 0) conf++;
-      return { disks: landed, perDisk, bpm: Math.round(bpm), confetti: conf };
+      return { disks: landed, perDisk, bpm: Math.round(bpm), layers: mixerChannels(), confetti: conf };
     },
   };
 }

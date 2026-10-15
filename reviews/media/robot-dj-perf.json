@@ -4,11 +4,11 @@
     "speed": 0.63,
     "durationS": 19,
     "clipS": 30.2,
-    "frames": 5461,
+    "frames": 5441,
     "fpsMedian": 178.57142857147497,
     "fpsP5": 175.43859649131764,
-    "skinMsMean": 0.23898553372389927,
-    "skinMsP95": 0.3999999761581421,
+    "skinMsMean": 0.3198309134711809,
+    "skinMsP95": 0.5,
     "halfRate": false
   },
   {
@@ -16,11 +16,11 @@
     "speed": 10.05,
     "durationS": 301.6,
     "clipS": 30,
-    "frames": 5425,
+    "frames": 5408,
     "fpsMedian": 178.57142857147497,
     "fpsP5": 175.43859649131764,
-    "skinMsMean": 0.3632258061000279,
-    "skinMsP95": 0.5,
+    "skinMsMean": 0.45623150885314545,
+    "skinMsP95": 0.7000000029802322,
     "halfRate": false
   },
   {
@@ -28,11 +28,11 @@
     "speed": 1.3,
     "durationS": 39,
     "clipS": 30,
-    "frames": 5400,
+    "frames": 5403,
     "fpsMedian": 178.57142857147497,
-    "fpsP5": 175.43859649131764,
-    "skinMsMean": 0.37898148159186046,
-    "skinMsP95": 0.5,
+    "fpsP5": 175.43859649126165,
+    "skinMsMean": 0.4300203590415792,
+    "skinMsP95": 0.6999999955296516,
     "halfRate": false
   }
 ]
