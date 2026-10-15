@@ -72,3 +72,8 @@ The smoke test passes for every trace, and unit tests pass 57/57. A 1× perf run
 - **The cake pieces get small on big files** (60 pieces fit in fixed tiers). In card size they read as a striped cake rather than separate crumbs.
 - **There's no sound** (none was asked for). A crunchy march or a party horn could come later.
 - The FPS figures aren't from a mid-range laptop or phone.
+
+## Follow-up (2026-10-15): David's answers applied
+
+- **Canvas 2D, the cartoon ants and the layer cake all stay.**
+- **Lookup nests: only nodes that answered get one** (up to 24). A failed query no longer draws a closed nest. A scout runs toward that node's real direction, gets no reply, and turns back halfway, so the miss still shows. The lookup capture and `ant-colony-real-lookup.png` were re-recorded. The smoke test passes.

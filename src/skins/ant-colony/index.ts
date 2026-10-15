@@ -689,13 +689,13 @@ export default function create(): Skin {
           break;
         }
         case "lookup.fail": {
-          const k = addNest(e.peerId, "node");
-          if (k < 0 || nests[k].kind === "seed") break;
-          nests[k].closed = true;
+          // No nest for a node that didn't answer: a scout heads its way, gets no reply, and
+          // turns back halfway.
           if (!snapping) {
             const m = hillMouth();
-            const a = spawn("scout", m.x, m.y, nests[k].x, nests[k].y);
-            if (a) { a.nest = k; a.speed = 110; }
+            const p = nestPos(frac(e.peerId), 0.8);
+            const a = spawn("scout", m.x, m.y, (m.x + p.x) / 2, (m.y + p.y) / 2);
+            if (a) { a.nest = -1; a.speed = 110; }
           }
           break;
         }

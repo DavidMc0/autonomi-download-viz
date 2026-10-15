@@ -2,6 +2,11 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-15 · Step 5 review outcome (David)
+
+- **Canvas 2D, cartoon ants and the layer cake stay.**
+- **Lookup nests:** at most 24, and **only for nodes that answered.** A failed query is a scout turning back halfway, with no closed nest.
+
 ## 2026-10-15 · Step 4 approved; Step 5, Ant colony (build choices, awaiting review)
 
 - **Hash garden approved** ("next").
