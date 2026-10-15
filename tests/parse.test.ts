@@ -24,6 +24,8 @@ describe("every message in brief section 2", () => {
     [`Connected to authenticated peer ${PEER}`, { type: "connect.peer", peerId: PEER }, { operation: "connect", phase: "complete" }],
     [`Iteration 3: ${PEER} returned 12 nodes`, { type: "lookup.round", iteration: 3, peerId: PEER, returned: 12 }],
     [`Iteration 1: ${PEER} returned 1 node`, { type: "lookup.round", iteration: 1, peerId: PEER, returned: 1 }],
+    [`Finding nodes closest to ${PEER}`, { type: "lookup.start", target: PEER }],
+    ["Closest-node lookup complete", { type: "lookup.done" }],
     [`Query ${PEER} failed: lookup query error: timed out`, { type: "lookup.fail", peerId: PEER, reason: "lookup query error: timed out" }],
     [`Ignoring invalid candidate from ${PEER}: Failed to deserialize candidate node`, { type: "lookup.invalid", peerId: PEER }],
     ["Retrying lookup through configured seeds", { type: "lookup.reseed" }],
