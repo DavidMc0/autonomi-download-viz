@@ -2,6 +2,15 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-15 · Step 4 approved; Step 5, Ant colony (build choices, awaiting review)
+
+- **Hash garden approved** ("next").
+- **Canvas 2D, not PixiJS** (6.9 kB, under 1 ms per frame), the same reasoning as Robot DJ. Ants are pooled (400 slots, 220 cap).
+- **Chunk timing stays exact:** workers queue by the cake, and one adds its crumb on each real `chunk.done`. If none is waiting, one pops out of the hill.
+- **The cake is three fixed tiers,** with pieces shrinking to fit (at most 60), so its height never depends on the file's size.
+- **Seed nests sit at the seeds' real addresses.** Node nests from real lookups use their real angle with an inward scatter, and at most 24 are drawn. Scouts are capped at 14.
+- **The skin uses Tier C enrichment** only for dropped crumbs (`chunk.retry`).
+
 ## 2026-10-15 · Step 4 review outcome (David)
 
 - **Recognisable plants** stay, and so does **the portrait caption** (name, short hash, credit).

@@ -1,0 +1,38 @@
+[
+  {
+    "trace": "lookup-64mb",
+    "speed": 4.01,
+    "durationS": 120.3,
+    "clipS": 30,
+    "frames": 3124,
+    "fpsMedian": 178.57142857147497,
+    "fpsP5": 175.4385964912057,
+    "skinMsMean": 0.549935979527754,
+    "skinMsP95": 0.8999999985098839,
+    "halfRate": false
+  },
+  {
+    "trace": "medium-64mb",
+    "speed": 1.48,
+    "durationS": 44.3,
+    "clipS": 29.9,
+    "frames": 4127,
+    "fpsMedian": 178.57142857147497,
+    "fpsP5": 175.4385964912057,
+    "skinMsMean": 0.47545432517278385,
+    "skinMsP95": 0.7000000029802322,
+    "halfRate": false
+  },
+  {
+    "trace": "fail-mid",
+    "speed": 0.8,
+    "durationS": 24.1,
+    "clipS": 30.1,
+    "frames": 2967,
+    "fpsMedian": 178.57142857147497,
+    "fpsP5": 163.93442622949843,
+    "skinMsMean": 0.6246713852094888,
+    "skinMsP95": 1,
+    "halfRate": false
+  }
+]
