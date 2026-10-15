@@ -78,3 +78,7 @@ The smoke test passes for every trace on all four skins, including the new `look
 - **Tooltips need a mouse.** They don't work on touch, and card size has none.
 - **Synthetic traces use made-up seed IDs,** so the connected seed there isn't one of the 7 bundled ones.
 - The FPS figures aren't from a mid-range laptop or phone.
+
+### Resolved (2026-10-15)
+
+All five suggestions were accepted as built: the opt-in lookup mode plus the dashed typical lookup, short captions, a time axis, Canvas 2D, and the typical lookup and close group kept. Nothing changed.

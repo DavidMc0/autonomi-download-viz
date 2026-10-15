@@ -2,6 +2,10 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-15 · Step 3 review outcome (David)
+
+- **All five suggestions accepted, so nothing changes.** The opt-in lookup mode stays for demos, with the dashed typical lookup otherwise (SDK request parked). Captions default to short. The chart's x axis is time. The skin stays on Canvas 2D. The typical lookup and close group stay, dashed and labelled.
+
 ## 2026-10-15 · Step 2 approved; Step 3, Address-space map (build choices, awaiting review)
 
 - **Robot DJ approved** ("let's start with step 3").
