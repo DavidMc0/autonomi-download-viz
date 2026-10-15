@@ -2,6 +2,16 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-15 · Step 2 approved; Step 3, Address-space map (build choices, awaiting review)
+
+- **Robot DJ approved** ("let's start with step 3").
+- **Peer IDs are real addresses** (checked on mainnet): `findClosest` for a file returned nodes sharing 5-11 leading bits with its address, against about 1 for random IDs. Nodes are placed at their real addresses, and closeness is real XOR distance (shared leading bits).
+- **The bundled seeds are drawn at their real addresses.** The 7 peer IDs come from the SDK 0.1.2 WASM's WebRTC Direct multiaddrs. The SDK is pinned, so they are a constant in the skin.
+- **`findClosest` reports lookup rounds, but a download doesn't.** An opt-in live mode ("find the closest nodes first, then download") and a real trace, `lookup-64mb-1`, show real rounds. Without them, the skin draws a typical lookup, dashed and labelled. Asked as review question 1.
+- **New events `lookup.start` and `lookup.done`.** A lookup operation's completion no longer ends the session.
+- **Synthetic lookups converge on the target** (only the peer IDs changed; the timings are the same).
+- **Canvas 2D instead of d3 and SVG** (9.3 kB). Asked as review question 4.
+
 ## 2026-10-15 · Step 2 follow-up (David)
 
 - **Build pace:** linear, one layer per 10%.

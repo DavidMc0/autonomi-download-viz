@@ -1,0 +1,26 @@
+[
+  {
+    "trace": "lookup-64mb",
+    "speed": 4.01,
+    "durationS": 120.3,
+    "clipS": 30,
+    "frames": 5396,
+    "fpsMedian": 178.57142857147497,
+    "fpsP5": 175.43859649131764,
+    "skinMsMean": 0.6618421052543211,
+    "skinMsP95": 0.9000000059604645,
+    "halfRate": false
+  },
+  {
+    "trace": "quick",
+    "speed": 0.63,
+    "durationS": 19,
+    "clipS": 30.2,
+    "frames": 5470,
+    "fpsMedian": 178.57142857147497,
+    "fpsP5": 175.43859649131764,
+    "skinMsMean": 0.5658683729604894,
+    "skinMsP95": 0.8999999985098839,
+    "halfRate": false
+  }
+]

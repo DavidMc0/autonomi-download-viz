@@ -4,7 +4,7 @@ import type { VizEvent } from "../events/types";
 
 const COLOURS: Partial<Record<VizEvent["type"], string>> = {
   "connect.start": "#4a7dff", "connect.peer": "#4a7dff", "connect.done": "#4a7dff", "connect.failed": "#d64545",
-  "lookup.round": "#9b6bff", "lookup.fail": "#d68a45", "lookup.invalid": "#d68a45", "lookup.reseed": "#d68a45",
+  "lookup.start": "#9b6bff", "lookup.round": "#9b6bff", "lookup.fail": "#d68a45", "lookup.invalid": "#d68a45", "lookup.reseed": "#d68a45",
   "datamap.fetch": "#1ea7a0", "datamap.nested": "#1ea7a0", "datamap.verified": "#1ea7a0",
   "chunk.stall": "#e0a100", "file.verified": "#2e9e5b", "session.done": "#2e9e5b",
   "session.failed": "#d64545", "session.cancelled": "#888888", "save.done": "#2e9e5b",

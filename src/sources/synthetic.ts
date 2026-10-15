@@ -84,6 +84,20 @@ export function syntheticAddress(label: string): string {
   return hex;
 }
 
+/** A random 64-hex address that shares exactly `bits` leading bits with `target`. */
+function closerTo(target: string, bits: number, rand: () => number): string {
+  let out = "";
+  for (let i = 0; i < 32; i++) {
+    const t = parseInt(target.slice(i * 2, i * 2 + 2), 16);
+    const keep = Math.max(0, Math.min(8, bits - i * 8)); // leading bits of this byte copied from the target
+    let b = Math.floor(rand() * 256);
+    if (keep > 0) b = (t & (0xff << (8 - keep)) & 0xff) | (b & (0xff >> keep));
+    if (keep < 8 && bits >= i * 8 && bits < i * 8 + 8) b ^= ((t ^ ~b) & (0x80 >> keep)); // the next bit differs
+    out += b.toString(16).padStart(2, "0");
+  }
+  return out;
+}
+
 export function presetTrace(id: string): Trace {
   const preset = SYNTHETIC_PRESETS[id];
   if (!preset) throw new Error(`Unknown synthetic preset ${id}`);
@@ -138,7 +152,7 @@ export function generateTrace(p: SyntheticParams, note?: string): Trace {
   let iteration = 0;
   for (const kind of kinds) {
     t += step * (0.6 + 0.8 * rand());
-    const peer = hex();
+    const peer = kind === "round" ? closerTo(p.address, 1 + iteration * 2 + Math.floor(rand() * 2), rand) : hex();
     if (kind === "round") {
       peers.push(peer);
       sdk(t, op, operation, "downloading", `Iteration ${++iteration}: ${peer} returned ${4 + Math.floor(rand() * 13)} nodes`);

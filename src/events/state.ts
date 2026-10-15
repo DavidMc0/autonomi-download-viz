@@ -46,6 +46,7 @@ export function reduce(s: SessionState, e: VizEvent): SessionState {
     case "connect.start": s.seeds = e.seeds; s.phase = "connecting"; break;
     case "connect.peer": s.peers++; break;
     case "connect.done": if (s.phase === "connecting") s.phase = "finding"; break;
+    case "lookup.start": if (s.phase === "connecting") s.phase = "finding"; break;
     case "lookup.round": s.rounds++; if (s.phase === "connecting") s.phase = "finding"; break;
     case "lookup.fail": s.failures++; break;
     case "lookup.invalid": s.invalid++; break;

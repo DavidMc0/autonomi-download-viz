@@ -10,7 +10,9 @@ import { SDK_VERSION } from "./version";
 
 let client: AutonomiClient | null = null;
 
-export type LiveMode = "download" | "save" | "stream";
+const LOOKUP_NOTE = "lookup mode: findClosest(address) ran first, as a separate lookup for the same address, then download(). SDK 0.1.2 reports no rounds for a download's own lookup.";
+
+export type LiveMode = "download" | "save" | "stream" | "lookup";
 
 export interface LiveOptions {
   address: string;
@@ -19,6 +21,9 @@ export interface LiveOptions {
   /**
    * "download": in-memory download() (default). "save": downloadAndSave(), with a save picker.
    * "stream": openFile() then read its stream to the end and discard it (bounded memory).
+   * "lookup": findClosest(address) first, then download(). SDK 0.1.2 reports no lookup rounds for a
+   * download, but findClosest does, so this shows a real lookup for the same address. It is a
+   * separate query (it takes much longer than the download's own), and it adds load, so it is opt-in.
    */
   mode: LiveMode;
   onRecord: (rec: TraceRecord) => void;
@@ -34,6 +39,7 @@ export class LiveSource {
       recordedAt: new Date().toISOString(), userAgent: navigator.userAgent,
       ...(opts.name ? { name: opts.name } : {}),
       ...(opts.size !== undefined ? { size: opts.size } : {}),
+      ...(opts.mode === "lookup" ? { note: LOOKUP_NOTE } : {}),
     });
   }
 
@@ -48,6 +54,10 @@ export class LiveSource {
       const signal = this.abort.signal;
       if (opts.mode === "save") await client.downloadAndSave(address, { signal });
       else if (opts.mode === "download") await client.download(address, { signal });
+      else if (opts.mode === "lookup") {
+        await client.findClosest(address, { signal });
+        await client.download(address, { signal });
+      }
       else {
         const reader = await client.openFile(address, { signal });
         try {

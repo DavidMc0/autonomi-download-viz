@@ -8,10 +8,13 @@ export type VizEventBody =
   | { type: "connect.peer"; peerId: string }
   | { type: "connect.done" }
   | { type: "connect.failed"; code?: string; message: string }
+  /** A closest-node lookup began (reported by findClosest; a download's own lookup is silent in 0.1.2). */
+  | { type: "lookup.start"; target: string }
   | { type: "lookup.round"; iteration: number; peerId: string; returned: number }
   | { type: "lookup.fail"; peerId: string; reason: string }
   | { type: "lookup.invalid"; peerId: string }
   | { type: "lookup.reseed" }
+  | { type: "lookup.done" }
   | { type: "datamap.fetch"; address: string }
   | { type: "datamap.nested"; address: string }
   | { type: "datamap.verified"; bytes: number }

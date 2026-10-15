@@ -13,7 +13,6 @@ const QUIET = [
   /^Initializing the Autonomi browser core$/,
   /^Opened /,
   /^Opening an Autonomi /,
-  /^Closest-node lookup complete$/,
   /^(download|download-and-save|connect|save|open-file|lookup|media) started$/,
 ];
 
@@ -54,6 +53,8 @@ export class Parser {
   private rules: Rule[] = [
     [/^Authenticating (\d+) bootstrap nodes?$/, (m) => ({ type: "connect.start", seeds: +m[1] })],
     [/^Connected to authenticated peer (\S+)$/, (m) => ({ type: "connect.peer", peerId: m[1] })],
+    [new RegExp(`^Finding nodes closest to (${HEX})$`), (m) => ({ type: "lookup.start", target: m[1] })],
+    [/^Closest-node lookup complete$/, () => ({ type: "lookup.done" })],
     [
       /^Iteration (\d+): (\S+) returned (\d+) nodes?\.?$/,
       (m) => ({ type: "lookup.round", iteration: +m[1], peerId: m[2], returned: +m[3] }),
@@ -104,8 +105,9 @@ export class Parser {
       if (ev.status === "failed") return this.end([{ type: "connect.failed", ...failure }, { type: "session.failed", ...failure }]);
       return this.end([{ type: "session.cancelled" }]);
     }
-    // Child operations (e.g. the save inside download-and-save) don't end the session.
-    if (ev.parentOperationId !== undefined) {
+    // Child operations (e.g. the save inside download-and-save) don't end the session, and nor does
+    // a findClosest lookup run ahead of the download (the "lookup" live mode).
+    if (ev.parentOperationId !== undefined || ev.operation === "lookup") {
       return ev.status === "failed" ? [{ type: "log", message: `${ev.operation} failed: ${failure.message}` }] : [];
     }
     if (ev.status === "succeeded") return this.end([{ type: "session.done" }]);
