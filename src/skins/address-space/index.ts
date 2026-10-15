@@ -13,7 +13,7 @@
 import { describeState, initialState, reduce } from "../../events/state";
 import type { VizEvent } from "../../events/types";
 import { defaultParams, type Skin, type SkinContext, type TweakDef } from "../types";
-import { addressNear, BUNDLED_SEEDS, frac, shareOfSpace, sharedBits } from "./xor";
+import { addressNear, BUNDLED_SEEDS, frac, shareOfSpace, sharedBits } from "../../events/xor";
 
 const tweakables: TweakDef[] = [
   { key: "layout", label: "layout", kind: "select", options: { ring: "ring", line: "line" }, default: "ring" },

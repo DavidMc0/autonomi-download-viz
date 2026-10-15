@@ -2,6 +2,15 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-15 · Step 3 approved; Step 4, Hash garden (build choices, awaiting review)
+
+- **Address-space map approved** ("Next").
+- **Canvas 2D, no WebGL or libraries** (7.4 kB). Painterly paper is a generated texture tile with flat, layered leaf fills, so there are no per-frame gradients.
+- **Three species** (daisy, branching shrub, lily), picked by the address and overridable. **Leaves are capped at 60**, with chunks grouped like Robot DJ's disks.
+- **Flower hues always contrast with the leaves** (the 200 degrees opposite their green), so a "green" hash can't hide the bloom.
+- **Roots reach for the seed nodes at their real addresses.** The shared address helpers moved to `src/events/xor.ts`.
+- **Failure is dormancy, not death,** with a "try again" shoot, as the brief asks.
+
 ## 2026-10-15 · Step 3 review outcome (David)
 
 - **All five suggestions accepted, so nothing changes.** The opt-in lookup mode stays for demos, with the dashed typical lookup otherwise (SDK request parked). Captions default to short. The chart's x axis is time. The skin stays on Canvas 2D. The typical lookup and close group stay, dashed and labelled.
