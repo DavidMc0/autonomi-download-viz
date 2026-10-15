@@ -49,7 +49,7 @@ The smoke test passes for all 9 traces on all three skins (56 checks), and a run
 | chunks per disk | auto: at most 60 disks, so 155 chunks are 3 per disk (or always 1) |
 | crowd size | 14 |
 | confetti | 160 |
-| tempo min / max | 92 / 128 bpm |
+| tempo | 122 bpm (fixed) |
 | music (with sound on) | on |
 
 ## Open questions for David
@@ -108,3 +108,20 @@ The smoke test passes for all 9 traces on all three skins (56 checks), and a run
 1. **Build pace.** One layer every 10% is linear. **A:** keep it. **B:** front-load it (kick by 5%, snare by 10% and so on), so short files reach the groove sooner. *I suggest A*, unless the first 10% feels too long on big files.
 2. **After the outro.** The track ends about 22 s after the drop, but the robot keeps dancing silently. **A:** keep that. **B:** the robot winds down (takes off its headphones and waves) when the music ends. *I suggest B*, as a cleaner ending.
 3. **Style.** After seeing them, keep **cute** as the default with the toggle? Or should one of the others replace it?
+
+### Resolved (2026-10-15)
+
+- **Build pace:** stays linear, one layer per 10%.
+- **Style:** **sleek is now the default.** Cute and retro remain in the tweak panel.
+
+## Follow-up 2 (2026-10-15): fixed tempo, a pad that breathes, cued entries, wind-down
+
+**What changed**
+- **Fixed tempo.** The music plays at a steady **122 bpm** (one "tempo" tweak, 90-140), and so does the robot's dance. The rate no longer speeds it up or slows it down. It still shows in the robot's mood (happy at a high rate), and progress shows in the layers.
+- **Layers join on the beat.** A new layer always waits for the next bar line. When one is due, a one-beat noise swell on the last beat of the bar leads into it. The mixer lights on the table now change on the same bar line, so they no longer light up mid-bar ahead of the sound.
+- **The pad breathes.** Once the drums are in, the pad chords play the first 4 bars of every 8-bar phrase and rest for the next 4. In the early sections (kick, snare, hat) that leaves a drums-only stretch, and later the bass, arpeggio and stabs carry the harmony while the pad rests. The pad is still constant at the very start (it's the only layer then), through the breakdown and through the drop.
+- **Wind-down.** When the track has rung out (14 bars after the drop, about 28 s at 122 bpm, or 2 s after "SAVED" if saving takes longer), the robot stops dancing, lifts its headphones off with both hands and hangs them round its neck, winks and waves. The lights fade down, and the crowd drifts off to the nearer side one by one and fades out. This happens with sound off too, on the same timing. Seeking past the end shows the finished state straight away. Still: `robot-dj-winddown.png`.
+
+**Checks:** the sound run (`medium-64mb` at 2×) brought layers in on bar lines (1, 2, 3, 4, 6, 8, 10), played the drop and the outro, ended in silence, and raised no errors. The smoke test passes for all three skins, and unit tests pass 54/54. The skin is **14.2 kB** gzipped and takes **0.28-0.41 ms** per frame (p95 0.60). The captures were re-recorded with sleek as the default.
+
+**To look at:** `/#robot-dj?trace=quick&size=full` reaches the wind-down quickest (about 30 s after the end of the download). Turn **Sound** on to hear the swells and the pad dropping in and out.

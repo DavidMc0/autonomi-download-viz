@@ -1,27 +1,28 @@
 // Robot DJ (Playful 1): an original robot DJ spins each chunk as a disk on its decks, then stacks it
 // onto a tower that becomes the file. It scratches and checks its watch when the network stalls,
-// scans the finished tower while the file is verified, and drops the beat at the end.
+// scans the finished tower while the file is verified, and drops the beat at the end. When the
+// track has played out, it takes its headphones off and waves while the crowd drifts away.
 //
 // Real (Tier A): every phase and its timing, the seed count and connected peer, the chunk count and
-// total (disks), the rate (tempo), stalls, verification and the hash, save, failure and cancel.
+// total (disks, and the music's layers), the rate (the robot's mood), stalls, verification and the
+// hash, save, failure and cancel.
 // Illustrative: the record-crate search while the file is being found (SDK 0.1.2 sends no lookup
 // rounds), the crowd, and which deck each disk spins on.
 
 import { describeState, initialState, reduce } from "../../events/state";
 import type { VizEvent } from "../../events/types";
 import { defaultParams, type Skin, type SkinContext, type TweakDef } from "../types";
-import { Beat, layersFor, type Section } from "./audio";
-import { drawArms, drawBody, newRig, rig, SCHEMES, seededScheme, type Expression, type RobotPalette, type RobotPose, type RobotStyle } from "./characters/robot";
+import { Beat, layersFor, SONG_BARS, type Section } from "./audio";
+import { drawArms, drawBody, drawPhones, newRig, PHONES_LIFT, rig, SCHEMES, seededScheme, type Expression, type RobotPalette, type RobotPose, type RobotStyle } from "./characters/robot";
 
 const tweakables: TweakDef[] = [
-  { key: "style", label: "robot style", kind: "select", options: { cute: "cute", retro: "retro", sleek: "sleek" }, default: "cute" },
+  { key: "style", label: "robot style", kind: "select", options: { cute: "cute", retro: "retro", sleek: "sleek" }, default: "sleek" },
   { key: "scheme", label: "robot colours", kind: "select", options: { "match style": "match", "seeded by address": "seeded", retro: "retro", sleek: "sleek", chrome: "chrome" }, default: "match" },
   { key: "tower", label: "tower style", kind: "select", options: { "stacked disks": "disks", vinyl: "vinyl" }, default: "disks" },
   { key: "group", label: "chunks per disk", kind: "select", options: { "auto (at most 60 disks)": "auto", "always 1": "1" }, default: "auto" },
   { key: "crowd", label: "crowd size", kind: "number", min: 0, max: 30, step: 1, default: 14 },
   { key: "confetti", label: "confetti", kind: "number", min: 0, max: 400, step: 10, default: 160 },
-  { key: "tempoMin", label: "tempo min (bpm)", kind: "number", min: 60, max: 110, step: 1, default: 92 },
-  { key: "tempoMax", label: "tempo max (bpm)", kind: "number", min: 100, max: 160, step: 1, default: 128 },
+  { key: "tempo", label: "tempo (bpm)", kind: "number", min: 90, max: 140, step: 1, default: 122 },
   { key: "music", label: "music (with sound on)", kind: "boolean", default: true },
   { key: "build", label: "music builds with download", kind: "boolean", default: true },
 ];
@@ -42,7 +43,7 @@ const SPEAKERS = [
 ];
 const VIEW = { full: { x: 0, y: 0, w: 960, h: 540 }, card: { x: 205, y: 120, w: 625, h: 382 } };
 
-type Mode = "idle" | "boot" | "plug" | "search" | "setlist" | "play" | "stall" | "check" | "drop" | "failed" | "cancelled";
+type Mode = "idle" | "boot" | "plug" | "search" | "setlist" | "play" | "stall" | "check" | "drop" | "winddown" | "failed" | "cancelled";
 
 const ease = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const approach = (cur: number, target: number, rate: number, dt: number) => cur + (target - cur) * (1 - Math.exp(-rate * dt));
@@ -97,13 +98,15 @@ export default function create(): Skin {
 
   // Music.
   let bpm = 0, phase = 0;
+  let visLayers = 0, lastBar = -1; // mixer lights, changed on bar lines like the music
+  let windAt = Infinity; // the track has played out
   let beatPulse = 0;
 
   // Robot.
   const pose: RobotPose = {
     x: ROBOT_X, y: FLOOR, bob: 0, lean: 0, headTilt: 0, shrug: 0,
     handL: { x: DECK_L.x, y: DECK_L.y - 8, z: 80 }, handR: { x: DECK_R.x, y: DECK_R.y - 8, z: 80 },
-    footTap: 0, expression: "off", visor: 0, blink: 0, antenna: 0, chest: 0,
+    footTap: 0, expression: "off", visor: 0, blink: 0, antenna: 0, chest: 0, phones: 0,
   };
   const r = newRig();
   // Hand goals; z is depth toward the viewer (the decks are in front of the robot).
@@ -224,7 +227,12 @@ export default function create(): Skin {
       case "finding": setMode(mapAt < Infinity && clock - mapAt < 2.2 ? "setlist" : "search"); break;
       case "downloading": setMode(state.stalled ? "stall" : "play"); break;
       case "verifying": case "saving": case "done":
-        if (dropAt < Infinity) setMode("drop");
+        if (dropAt < Infinity) {
+          // The track runs SONG_BARS from the drop; a save in progress holds the party a little.
+          windAt = dropAt + (SONG_BARS * 240) / tempo();
+          if (saveAt < Infinity) windAt = savedAt < Infinity ? Math.max(windAt, savedAt + 2) : Infinity;
+          setMode(clock >= windAt ? "winddown" : "drop");
+        }
         else setMode(landed >= disks && disks > 0 ? "check" : "play");
         break;
       case "failed": setMode("failed"); break;
@@ -325,6 +333,31 @@ export default function create(): Skin {
         }
         break;
       }
+      case "winddown": {
+        // Stop, lift the headphones off, hang them round the neck, wave.
+        const t = clock - windAt;
+        const headY = FLOOR - 204;
+        expr = "happy";
+        pose.phones = 0;
+        if (t >= 1 && t < 2.6) {
+          const k = t < 1.8 ? 0 : ease((t - 1.8) / 0.8);
+          pose.phones = Math.min(0.999, k);
+          goalL.x = ROBOT_X - 54; goalR.x = ROBOT_X + 54;
+          goalL.y = goalR.y = headY - k * PHONES_LIFT;
+          goalL.z = goalR.z = 0;
+        } else if (t >= 2.6 && t < 3.4) {
+          pose.phones = 1;
+          goalL.x = ROBOT_X - 34; goalR.x = ROBOT_X + 34;
+          goalL.y = goalR.y = FLOOR - 150;
+          goalL.z = goalR.z = 30;
+        } else if (t >= 3.4) {
+          pose.phones = 2;
+          expr = t < 5.2 ? "wink" : "happy";
+          goalR.x = ROBOT_X + 70; goalR.y = FLOOR - 250 + (t < 7 ? Math.sin(clock * 9) * 12 : 30); goalR.z = 0;
+          goalL.x = ROBOT_X - 64; goalL.y = TABLE.y - 12; goalL.z = 50;
+        }
+        break;
+      }
       case "failed":
         expr = el < 0.6 ? "wow" : "sad";
         shrugGoal = el < 0.6 ? 0 : 1;
@@ -359,6 +392,7 @@ export default function create(): Skin {
     pose.footTap = tap;
     const dancing = bpm > 0 && (mode === "play" || mode === "drop" || mode === "check");
     pose.bob = dancing ? b * (ctx.reducedMotion ? 2 : 5) + (mode === "drop" && clock - dropAt < 3 && !ctx.reducedMotion ? -Math.abs(Math.sin(phase * Math.PI)) * 14 : 0) : 0;
+    if (mode !== "winddown") pose.phones = 0;
     pose.chest = bpm > 0 ? b : mode === "failed" || mode === "cancelled" ? 0 : 0.2;
     pose.antenna = mode === "idle" ? 0 : peerAt < Infinity && clock - peerAt < 1 ? 1 : 0.4 + 0.6 * b;
     pose.blink = (clock % 3.7) < 0.12 ? 1 : 0;
@@ -421,14 +455,18 @@ export default function create(): Skin {
   }
 
   function mixerChannels(): number {
-    if (mode === "play") return params.build ? layersFor(progress()) : 9;
+    if (mode === "play") return visLayers;
     if (mode === "check") return 3;
     if (mode === "drop") {
       // 8 full bars at the top tempo, then the outro takes layers away (as the music does).
-      const bar = ((clock - dropAt) * Number(params.tempoMax)) / 240 - 8;
+      const bar = ((clock - dropAt) * tempo()) / 240 - 8;
       return bar < 0 ? 10 : [6, 3, 2, 1][Math.floor(bar)] ?? 0;
     }
     return 0;
+  }
+
+  function tempo(): number {
+    return Math.max(60, Number(params.tempo) || 122);
   }
 
   function section(): Section {
@@ -742,6 +780,11 @@ export default function create(): Skin {
         g.fillRect(r.handR.x - 12, r.handR.y - 30, 24, 24);
       }
     }
+    // Headphones in the hands, on their way down to the neck.
+    if (mode === "winddown" && pose.phones === 1) {
+      const sc = 1 - 0.3 * ease((clock - windAt - 2.6) / 0.8);
+      drawPhones(g, (r.handL.x + r.handR.x) / 2, (r.handL.y + r.handR.y) / 2 - 28 * sc, pal, style, sc);
+    }
     // Watch on the wrist while stalled.
     if (mode === "stall" && clock - stallAt > 0.7) {
       g.fillStyle = pal.glow;
@@ -751,7 +794,7 @@ export default function create(): Skin {
     }
     // Signs.
     let sign = "";
-    if (mode === "drop" && saveAt < Infinity) sign = savedAt < Infinity ? "SAVED" : "SAVING…";
+    if ((mode === "drop" || mode === "winddown") && saveAt < Infinity) sign = savedAt < Infinity ? "SAVED" : "SAVING…";
     if (sign) {
       g.font = `800 ${card ? 30 : 22}px system-ui, sans-serif`;
       const tw = g.measureText(sign).width;
@@ -771,16 +814,28 @@ export default function create(): Skin {
     const y0 = vw.y + vw.h - (card ? 6 : 30);
     const drop = mode === "drop" && clock - dropAt < 3.5 && !ctx.reducedMotion;
     const sad = mode === "failed" || mode === "cancelled";
+    const leaving = mode === "winddown" ? clock - windAt - 1 : -1;
     for (let i = 0; i < n; i++) {
       const x = vw.x + ((i + 0.5) / n) * vw.w + (hash01(seedWord, i) - 0.5) * (vw.w / n) * 0.6;
       const size = (card ? 34 : 22) * (0.85 + hash01(seedWord, i + 50) * 0.3);
       const off = hash01(seedWord, i + 99);
-      let dy = 0;
+      let dy = 0, dx = 0;
+      if (leaving > 0) {
+        // Each person heads for the nearer side, one after another, and fades out.
+        const lt = leaving - hash01(seedWord, i + 200) * 3;
+        if (lt > 0) {
+          const alpha = 1 - lt / 3;
+          if (alpha <= 0) continue;
+          dx = (x < vw.x + vw.w / 2 ? -1 : 1) * lt * (60 + hash01(seedWord, i + 300) * 50);
+          dy -= Math.abs(Math.sin(lt * 9)) * 3;
+          g.globalAlpha = alpha;
+        }
+      }
       if (bpm > 0) dy -= Math.max(0, Math.sin((phase + off * 0.5) * Math.PI * 2)) * (ctx.reducedMotion ? 1.5 : 4);
       dy -= crowdKick[i] * 10;
       if (drop) dy -= Math.abs(Math.sin((clock - dropAt) * 6 + off * 6)) * 18;
       if (sad) dy += 6;
-      const cx = x, cy = y0 + dy;
+      const cx = x + dx, cy = y0 + dy;
       g.fillStyle = `hsl(${(hue0 + i * 47) % 360} ${ctx.theme === "dark" ? "22% 26%" : "24% 42%"})`;
       g.beginPath();
       g.arc(cx, cy, size * 0.55, 0, Math.PI * 2);
@@ -801,6 +856,7 @@ export default function create(): Skin {
           }
         }
       }
+      g.globalAlpha = 1;
     }
   }
 
@@ -948,19 +1004,20 @@ export default function create(): Skin {
       }
       deriveMode();
 
-      // Tempo follows the rate; silence while stalled, finding or after the end.
-      const tmin = Number(params.tempoMin), tmax = Math.max(tmin, Number(params.tempoMax));
-      let target = 0;
-      if (mode === "play" || mode === "check") target = tmin + (tmax - tmin) * (maxRate > 0 ? Math.min(1, rate / maxRate) : 0.5);
-      if (mode === "drop") target = tmax;
-      bpm = target === 0 ? approach(bpm, 0, 6, dt) : approach(bpm || target, target, 1.5, dt);
-      if (bpm < 20) bpm = target === 0 ? 0 : bpm;
+      // A fixed tempo while the music plays; silence while stalled, finding, or once it has ended.
+      const playing = mode === "play" || mode === "check" || mode === "drop";
+      bpm = playing ? tempo() : approach(bpm, 0, 6, dt);
+      if (!playing && bpm < 20) bpm = 0;
       const audible = beat && ctx.audio?.state === "running";
       if (audible) beat!.tick({ bpm, section: section(), progress: progress(), build: Boolean(params.build) });
       // Follow the beat the listener hears when there is one; otherwise keep time from the tempo.
       const heard = audible ? beat!.phase() : null;
       phase = heard ?? phase + (dt * bpm) / 60;
       beatPulse = bpm > 0 ? Math.exp(-(phase % 1) * 5) : 0;
+      // Mixer lights take on new layers at bar lines, as the music does.
+      const barNow = Math.floor(phase / 4);
+      if (mode === "play" && (barNow !== lastBar || visLayers === 0)) visLayers = params.build ? layersFor(progress()) : 9;
+      lastBar = barNow;
       deckSpin += dt * (bpm > 0 ? (bpm / 60) * 2.2 : mode === "search" || mode === "setlist" ? 0.6 : 0);
       for (let i = 0; i < landBounce.length; i++) landBounce[i] *= Math.exp(-dt * 9);
       for (let i = 0; i < crowdKick.length; i++) crowdKick[i] *= Math.exp(-dt * 5);
@@ -977,7 +1034,7 @@ export default function create(): Skin {
       g.fillRect(0, 0, w, h);
       g.setTransform(dpr * s, 0, 0, dpr * s, dpr * ((w - vw.w * s) / 2 - vw.x * s), dpr * ((h - vw.h * s) / 2 - vw.y * s));
 
-      const lightsOn = mode === "drop" ? 1 : mode === "play" || mode === "check" ? 0.45 : mode === "stall" ? 0.15 : 0;
+      const lightsOn = mode === "drop" ? 1 : mode === "winddown" ? Math.max(0.12, 1 - (clock - windAt) / 3) : mode === "play" || mode === "check" ? 0.45 : mode === "stall" ? 0.15 : 0;
       drawBackground(vw, lightsOn * (ctx.reducedMotion ? 0.6 : 1));
       drawSpeakers(card);
       drawCrate();

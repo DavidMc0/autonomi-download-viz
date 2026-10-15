@@ -33,6 +33,8 @@ export interface RobotPose {
   antenna: number;
   /** 0..1 chest LEDs (the beat). */
   chest: number;
+  /** Headphones: 0 on the head, up to 1 lifted off (then the skin draws them in the hands), 2 around the neck. */
+  phones: number;
 }
 
 export interface RobotPalette {
@@ -187,6 +189,7 @@ export function drawBody(g: CanvasRenderingContext2D, p: RobotPose, c: RobotPale
   if (style === "retro") retroTorso(g, p, c, by);
   else if (style === "sleek") sleekTorso(g, p, c, by);
   else cuteTorso(g, p, c, by);
+  if (p.phones >= 2) neckPhones(g, p, c, by, style);
 
   // Neck and head.
   g.fillStyle = c.joint;
@@ -348,17 +351,71 @@ function cuteHead(g: CanvasRenderingContext2D, p: RobotPose, c: RobotPalette, t:
   g.fill();
   g.stroke();
   visor(g, p, c, t, "cute");
-  // Headphones.
+  if (liftPhones(g, p)) {
+    g.strokeStyle = c.outline;
+    g.lineWidth = 5;
+    g.beginPath();
+    g.arc(0, -8, 52, Math.PI * 1.08, Math.PI * 1.92);
+    g.stroke();
+    g.fillStyle = c.accent;
+    for (let side = -1; side <= 1; side += 2) {
+      rr(g, side * 52 - 8, -16, 16, 32, 7);
+      g.fill();
+    }
+    g.restore();
+  }
+}
+
+/** Headphones (head-local) as they are lifted off: saves and offsets the context, or returns false. */
+function liftPhones(g: CanvasRenderingContext2D, p: RobotPose): boolean {
+  if (p.phones >= 1) return false;
+  g.save();
+  g.translate(0, -p.phones * PHONES_LIFT);
+  return true;
+}
+
+/** How far the headphones rise before they come off (px). */
+export const PHONES_LIFT = 34;
+
+/** Headphones hung around the neck, cups resting on the collar. */
+function neckPhones(g: CanvasRenderingContext2D, p: RobotPose, c: RobotPalette, by: number, style: RobotStyle): void {
+  const y = p.y + TORSO_TOP + by + 4;
   g.strokeStyle = c.outline;
-  g.lineWidth = 5;
+  g.lineWidth = style === "sleek" ? 3 : 5;
   g.beginPath();
-  g.arc(0, -8, 52, Math.PI * 1.08, Math.PI * 1.92);
+  g.ellipse(p.x, y, 30, 14, 0, 0.05 * Math.PI, 0.95 * Math.PI);
+  g.stroke();
+  g.fillStyle = c.accent;
+  g.strokeStyle = c.outline;
+  g.lineWidth = 2;
+  for (let side = -1; side <= 1; side += 2) {
+    g.beginPath();
+    if (style === "retro") g.roundRect(p.x + side * 30 - 9, y - 6, 18, 20, 3);
+    else g.ellipse(p.x + side * 30, y + 3, style === "sleek" ? 7 : 9, style === "sleek" ? 11 : 12, side * 0.3, 0, Math.PI * 2);
+    g.fill();
+    g.stroke();
+  }
+}
+
+/** Headphones off the head, as a prop (centre of the band at x, y). */
+export function drawPhones(g: CanvasRenderingContext2D, x: number, y: number, c: RobotPalette, style: RobotStyle, scale = 0.8): void {
+  g.save();
+  g.translate(x, y);
+  g.scale(scale, scale);
+  g.strokeStyle = c.outline;
+  g.lineWidth = style === "sleek" ? 3 : style === "retro" ? 6 : 5;
+  g.lineCap = "round";
+  g.beginPath();
+  if (style === "retro") { g.moveTo(-52, 22); g.lineTo(-52, 0); g.lineTo(52, 0); g.lineTo(52, 22); }
+  else g.arc(0, 44, 50, Math.PI * 1.12, Math.PI * 1.88);
   g.stroke();
   g.fillStyle = c.accent;
   for (let side = -1; side <= 1; side += 2) {
-    rr(g, side * 52 - 8, -16, 16, 32, 7);
+    if (style === "sleek") { g.beginPath(); g.ellipse(side * 47, 28, 6, 14, 0, 0, Math.PI * 2); }
+    else rr(g, side * 52 - 9, 14, 18, 28, style === "retro" ? 3 : 7);
     g.fill();
   }
+  g.restore();
 }
 
 function retroHead(g: CanvasRenderingContext2D, p: RobotPose, c: RobotPalette, t: number): void {
@@ -383,18 +440,21 @@ function retroHead(g: CanvasRenderingContext2D, p: RobotPose, c: RobotPalette, t
   g.fillStyle = c.outline;
   for (let i = 0; i < 3; i++) g.fillRect(34, 11 + i * 5, 10, 2);
   // Chunky box headphones.
-  g.strokeStyle = c.outline;
-  g.lineWidth = 6;
-  g.beginPath();
-  g.moveTo(-56, -6);
-  g.lineTo(-56, -44);
-  g.lineTo(56, -44);
-  g.lineTo(56, -6);
-  g.stroke();
-  g.fillStyle = c.accent;
-  for (let side = -1; side <= 1; side += 2) {
-    rr(g, side * 56 - 10, -20, 20, 30, 3);
-    g.fill();
+  if (liftPhones(g, p)) {
+    g.strokeStyle = c.outline;
+    g.lineWidth = 6;
+    g.beginPath();
+    g.moveTo(-56, -6);
+    g.lineTo(-56, -44);
+    g.lineTo(56, -44);
+    g.lineTo(56, -6);
+    g.stroke();
+    g.fillStyle = c.accent;
+    for (let side = -1; side <= 1; side += 2) {
+      rr(g, side * 56 - 10, -20, 20, 30, 3);
+      g.fill();
+    }
+    g.restore();
   }
 }
 
@@ -421,16 +481,19 @@ function sleekHead(g: CanvasRenderingContext2D, p: RobotPose, c: RobotPalette, t
   g.stroke();
   g.globalAlpha = 1;
   // Slim earpieces on a thin band.
-  g.strokeStyle = c.outline;
-  g.lineWidth = 3;
-  g.beginPath();
-  g.arc(0, -4, 50, Math.PI * 1.12, Math.PI * 1.88);
-  g.stroke();
-  g.fillStyle = c.accent;
-  for (let side = -1; side <= 1; side += 2) {
+  if (liftPhones(g, p)) {
+    g.strokeStyle = c.outline;
+    g.lineWidth = 3;
     g.beginPath();
-    g.ellipse(side * 47, -2, 6, 14, 0, 0, Math.PI * 2);
-    g.fill();
+    g.arc(0, -4, 50, Math.PI * 1.12, Math.PI * 1.88);
+    g.stroke();
+    g.fillStyle = c.accent;
+    for (let side = -1; side <= 1; side += 2) {
+      g.beginPath();
+      g.ellipse(side * 47, -2, 6, 14, 0, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.restore();
   }
 }
 

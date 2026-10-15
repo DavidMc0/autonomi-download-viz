@@ -2,6 +2,15 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-15 · Step 2 follow-up (David)
+
+- **Build pace:** linear, one layer per 10%.
+- **Default style: sleek.** Cute and retro stay as options.
+- **Fixed tempo (122 bpm, tweakable):** tempo changes driven by the rate felt random and jarring. The rate now only sets the robot's mood.
+- **Layers join on bar lines,** cued by a one-beat swell. The mixer lights follow the same bar lines.
+- **The pad rests** for the second half of each 8-bar phrase once the drums are in.
+- **Wind-down after the track:** the robot takes its headphones off (they hang round its neck) and waves, the lights dim, and the crowd disperses. It's timed from the drop, so it's the same with sound off.
+
 ## 2026-10-15 · Step 2 review outcome (David)
 
 - **Libraries:** Canvas 2D and Web Audio, not PixiJS or Tone.js.

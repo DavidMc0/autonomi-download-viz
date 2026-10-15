@@ -1,6 +1,6 @@
 // Robot DJ's sound: a tiny Web Audio synth (no samples, no libraries) that plays a track which builds
-// with the download. A 16th-note sequencer schedules a little ahead of the audio clock. At each bar
-// line it reads how much of the file is in and brings in one more layer per tenth:
+// with the download, at a fixed tempo. A 16th-note sequencer schedules a little ahead of the audio
+// clock. New layers join only on a bar line, after a one-beat swell, one more per tenth of the file:
 //
 //   0-10%  pad (its filter opening)      50-60%  + arpeggio
 //  10-20%  + kick                         60-70%  + 16th hats and an open hat
@@ -8,7 +8,8 @@
 //  30-40%  + off-beat hat                 80-90%  + chord stabs
 //  40-50%  + bass                         90-100% + a snare roll that tightens toward the end
 //
-// While the whole file is checked, the drums fall away into a breakdown (pad, arpeggio, a noise
+// Once the drums are in, the pad rests for the second half of every 8-bar phrase, so the harmony
+// breathes. While the whole file is checked, the drums fall away into a breakdown (pad, arpeggio, a noise
 // riser and an accelerating roll). On the drop every layer returns with a crash for 8 bars, then
 // the layers leave one by one and the track ends on the home chord.
 //
@@ -40,6 +41,8 @@ const PROGRESSIONS = [[I, VI, III, VII], [I, IV, VI, V], [I, VII, VI, VII], [VI,
 const ARP = [0, 1, 2, 3, 2, 1, 0, 1]; // 3 = the root an octave up
 const DROP_BARS = 8;
 const OUTRO_BARS = 4;
+/** Bars from the drop until the last chord has rung out (the robot winds down then). */
+export const SONG_BARS = DROP_BARS + OUTRO_BARS + 2;
 
 const mtof = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 
@@ -144,11 +147,13 @@ export class Beat {
     const on = { pad: true, kick: false, snare: false, hat: false, bass: false, arp: false, hats: false, lead: false, stabs: false };
 
     if (this.section === "play") {
-      if (s === 0 || this.layers === 0) this.layers = input.build ? layersFor(input.progress) : 9;
+      const due = input.build ? layersFor(input.progress) : 9;
+      if (s === 0 || this.layers === 0) this.layers = due;
+      else if (s === 12 && due > this.layers) this.swell(t, spb * 4); // cue the layer joining next bar
       const n = this.layers;
       on.kick = n > 1; on.snare = n > 2; on.hat = n > 3; on.bass = n > 4; on.arp = n > 5; on.hats = n > 6; on.lead = n > 7; on.stabs = n > 8;
       if (n > 9) roll = Math.min(1, Math.max(0, (input.progress - 0.9) * 10));
-      if (s === 0) this.pad(t, chord, spb * 16, 500 + 3500 * Math.min(1, input.progress * 1.4), n > 1 ? 0.7 : 1);
+      if (s === 0 && (n === 1 || bar % 8 < 4)) this.pad(t, chord, spb * 16, 500 + 3500 * Math.min(1, input.progress * 1.4), n > 1 ? 0.7 : 1);
     } else if (this.section === "check") {
       // Breakdown: no kick; the roll tightens over about 6 s.
       roll = Math.min(1, (t - this.checkAt) / 6);
@@ -294,6 +299,24 @@ export class Beat {
     src.connect(f).connect(this.env(t, peak, dur));
     src.start(t, Math.random() * 0.5);
     src.stop(t + dur + 0.05);
+  }
+
+  /** A short noise swell that lands on the next downbeat. */
+  private swell(t: number, dur: number): void {
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noise;
+    const f = this.ctx.createBiquadFilter();
+    f.type = "bandpass";
+    f.Q.value = 1.2;
+    f.frequency.setValueAtTime(700, t);
+    f.frequency.exponentialRampToValueAtTime(6000, t + dur);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.09, t + dur * 0.97);
+    g.gain.linearRampToValueAtTime(0, t + dur);
+    src.connect(f).connect(g).connect(this.bus);
+    src.start(t, 0.3);
+    src.stop(t + dur + 0.02);
   }
 
   private startRiser(t: number): void {

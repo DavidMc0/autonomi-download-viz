@@ -1,6 +1,7 @@
 // Stills of one skin at a chosen point in a trace, with tweak values, for checking a look quickly.
 //   node scripts/shots.ts <skin-id> --trace medium-64mb --at 0.5 --params '{"style":"retro"}' --out shot
-// --at is the fraction of chunks completed (0..1), or "end". Writes <out>-0..3.png, 120 ms apart.
+// --at is the fraction of chunks completed (0..1), or "end". Writes <out>-0..3.png, --gap ms apart
+// (120), after --wait ms (700, or 2500 at the end).
 // Needs the dev server (npm run dev).
 
 import { chromium } from "playwright-core";
@@ -18,6 +19,8 @@ const params = flag("params", "{}");
 const size = flag("size", "full");
 const theme = flag("theme", "light");
 const out = flag("out", "reviews/media/shot");
+const wait = flag("wait", "");
+const gap = Number(flag("gap", "120"));
 const skin = args[0];
 if (!skin) {
   console.error("usage: node scripts/shots.ts <skin-id> [--trace id] [--at 0.5|end] [--params json] [--out stem]");
@@ -35,9 +38,9 @@ await page.evaluate(() => (window.__viz!.player.playing = true));
 if (at === "end") await page.waitForFunction(() => window.__viz!.player.ended, null, { timeout: 120000, polling: 50 });
 else await page.waitForFunction((f) => { const s = window.__viz!.state(); return s.total ? s.completed / s.total >= f : false; }, Number(at), { timeout: 120000, polling: 20 });
 await page.evaluate(() => (window.__viz!.player.playing = false));
-await page.waitForTimeout(at === "end" ? 2500 : 700);
+await page.waitForTimeout(wait ? Number(wait) : at === "end" ? 2500 : 700);
 for (let i = 0; i < 4; i++) {
   await page.locator("#stage").screenshot({ path: `${out}-${i}.png` });
-  await page.waitForTimeout(120);
+  await page.waitForTimeout(gap);
 }
 await browser.close();
