@@ -18,7 +18,7 @@ import { at, makeBloom, makePlant, SAMPLES, type Bloom, type Plant } from "./pla
 
 const tweakables: TweakDef[] = [
   { key: "species", label: "species", kind: "select", options: { "seeded by address": "seeded", daisy: "daisy", "branching shrub": "shrub", lily: "lily" }, default: "seeded" },
-  { key: "growth", label: "chunks grow", kind: "select", options: { leaves: "leaves", petals: "petals" }, default: "leaves" },
+  { key: "growth", label: "chunks grow", kind: "select", options: { petals: "petals", leaves: "leaves" }, default: "petals" },
   { key: "palette", label: "palette", kind: "select", options: { "seeded by address": "seeded", spring: "spring", autumn: "autumn", ink: "ink" }, default: "seeded" },
   { key: "paper", label: "paper texture", kind: "number", min: 0, max: 1, step: 0.05, default: 0.6 },
   { key: "frame", label: "portrait frame", kind: "select", options: { mat: "mat", "thin line": "line", none: "none" }, default: "mat" },
@@ -27,11 +27,8 @@ const tweakables: TweakDef[] = [
 
 const W = 960, H = 540, SOIL = 440, BASE_X = 480;
 const MAX_SLOTS = 60;
-const VIEW = {
-  full: { x: 0, y: 0, w: 960, h: 540 },
-  cardPlant: { x: 169, y: 74, w: 622, h: 380 },
-  cardRoots: { x: 169, y: 236, w: 622, h: 380 },
-};
+const VIEW = { full: { x: 0, y: 0, w: 960, h: 540 } };
+const CARD_ASPECT = 360 / 220;
 
 const ease = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : x * x * (3 - 2 * x));
 const approach = (cur: number, target: number, rate: number, dt: number) => cur + (target - cur) * (1 - Math.exp(-rate * dt));
@@ -64,7 +61,11 @@ export default function create(): Skin {
   let seeds = 0, peerIdx = -1;
   const seedPts: { x: number; y: number }[] = [];
   const hairs: Hair[] = [];
-  let camY = VIEW.cardRoots.y;
+  // Card framing, fitted to this plant (including its flower head) so nothing is cut off.
+  const card = { x: 0, y: 0, w: 0, h: 0, rootsY: 0 };
+  let camY = 0;
+  /** The plant's top edge: the highest stem or branch tip, less the flower head's reach. */
+  let plantTop = 0;
   let sway = 0;
   let paper: CanvasPattern | null = null;
   let paperTile: HTMLCanvasElement | null = null;
@@ -88,9 +89,36 @@ export default function create(): Skin {
   // ---------------------------------------------------------------------------
   // Setup.
 
+  function headReach(): number {
+    // The largest head (60 petals, 3 rings), so the framing never jumps when the total arrives.
+    if (params.growth === "petals") return (34 + 2 * 16) * 1.05 + 10;
+    return 62;
+  }
+
+  function frameCard(): void {
+    let x0 = BASE_X, x1 = BASE_X, top = SOIL;
+    for (const c of plant.curves) {
+      for (let i = 0; i <= SAMPLES; i++) {
+        x0 = Math.min(x0, c.xs[i]); x1 = Math.max(x1, c.xs[i]); top = Math.min(top, c.ys[i]);
+      }
+    }
+    const reach = headReach();
+    plantTop = top - reach;
+    const hv = Math.max(300, SOIL + 24 - (plantTop - 8));
+    const wv = Math.max(hv * CARD_ASPECT, x1 - x0 + 140);
+    const hh = wv / CARD_ASPECT;
+    card.w = wv;
+    card.h = hh;
+    card.x = (x0 + x1) / 2 - wv / 2;
+    card.y = SOIL + 24 - hh;
+    card.rootsY = SOIL - hh * 0.3;
+    if (!camY) camY = card.rootsY;
+  }
+
   function build(): void {
     const petals = params.growth === "petals";
     plant = makePlant(ctx.seed, petals ? 4 : slotsN, String(params.species), SOIL, BASE_X);
+    frameCard();
     leafCache.length = 0;
     bloom = makeBloom(plant.species, state.address || "00", plant.leafHue);
     if (state.hash) hashBloom = makeBloom(plant.species, state.hash, plant.leafHue);
@@ -558,7 +586,8 @@ export default function create(): Skin {
     g.fillStyle = frame === "mat" ? (ctx.theme === "dark" ? "#2a2c35" : "#fbf8f1") : C.paper;
     g.fillRect(0, 0, PW, PH);
     // The plant, cropped to a 4:5 window around it.
-    const crop = { x: 260, y: 10, w: 440, h: 550 };
+    const ch = Math.max(550, SOIL + 120 - (plantTop - 16));
+    const crop = { x: BASE_X - (ch * 0.8) / 2, y: SOIL + 120 - ch, w: ch * 0.8, h: ch };
     const iw = PW - mat * 2, ih = (iw * 5) / 4;
     g.save();
     g.beginPath();
@@ -708,9 +737,9 @@ export default function create(): Skin {
       const breeze = state.stalled && endAt === Infinity ? 0.035 : state.phase === "failed" || state.phase === "cancelled" ? 0 : 0.008;
       sway = ctx.reducedMotion ? 0 : breeze * Math.sin(clock * 1.1) + breeze * 0.4 * Math.sin(clock * 2.7);
 
-      const vw = ctx.size === "full" ? VIEW.full : VIEW.cardPlant;
+      const vw = ctx.size === "full" ? VIEW.full : card;
       if (ctx.size === "card") {
-        const goal = mapAt < Infinity || endAt < Infinity ? VIEW.cardPlant.y : VIEW.cardRoots.y;
+        const goal = mapAt < Infinity || endAt < Infinity ? card.y : card.rootsY;
         camY = snapping || ctx.reducedMotion ? goal : approach(camY, goal, 1.6, dt);
       }
       const vy = ctx.size === "card" ? camY : vw.y;

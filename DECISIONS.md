@@ -2,6 +2,12 @@
 
 The current plan is whatever this file says. Newest first.
 
+## 2026-10-15 · Step 4 review outcome (David)
+
+- **Recognisable plants** stay, and so does **the portrait caption** (name, short hash, credit).
+- **Petals are the default growth;** leaves remain a tweak.
+- **The card framing fits the whole plant,** including the largest flower head it could grow, so the head is never cut off.
+
 ## 2026-10-15 · Step 3 approved; Step 4, Hash garden (build choices, awaiting review)
 
 - **Address-space map approved** ("Next").

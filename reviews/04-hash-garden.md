@@ -75,3 +75,10 @@ Leaf colours are cached, the paper texture is generated once as a tile, and ther
 - **Seed pebbles show along the soil by address,** but their depth is decoration.
 - **The portrait is drawn from the same scene** at 2.3× scale, so the paper grain is coarser there than on screen.
 - The FPS figures aren't from a mid-range laptop or phone.
+
+## Follow-up (2026-10-15): David's answers applied
+
+- **Recognisable plants** and **the portrait caption** stay as they are.
+- **Petals are now the default:** each chunk group adds a petal to a big flower head, and the plant keeps 4 decorative leaves. "chunks grow: leaves" is still a tweak.
+- **The card always fits the whole plant.** The card framing is now worked out from each plant's own shape, including its tallest tip and the largest flower head it could grow (60 petals, 3 rings). So the head is never cut off, and the framing doesn't jump when the chunk total arrives. Shrub branches are fitted sideways too. The card still pans down to the roots while connecting. The portrait crop uses the same bounds.
+- New captures replace the old ones. The smoke test passes. The skin is 7.6 kB gzipped and takes 0.18-0.41 ms per frame.

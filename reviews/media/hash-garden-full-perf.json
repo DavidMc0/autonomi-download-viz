@@ -4,10 +4,10 @@
     "speed": 1.48,
     "durationS": 44.3,
     "clipS": 29.9,
-    "frames": 5397,
+    "frames": 5415,
     "fpsMedian": 178.57142857147497,
-    "fpsP5": 175.43859649126165,
-    "skinMsMean": 0.3010190846617628,
+    "fpsP5": 175.43859649131764,
+    "skinMsMean": 0.3214773776444812,
     "skinMsP95": 0.5,
     "halfRate": false
   },
@@ -16,10 +16,10 @@
     "speed": 0.8,
     "durationS": 24.1,
     "clipS": 30.1,
-    "frames": 5439,
+    "frames": 5457,
     "fpsMedian": 178.57142857147497,
-    "fpsP5": 175.43859649131764,
-    "skinMsMean": 0.43096157379953887,
+    "fpsP5": 175.43859649123368,
+    "skinMsMean": 0.414311892915683,
     "skinMsP95": 0.7000000029802322,
     "halfRate": false
   }
